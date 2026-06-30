@@ -108,8 +108,14 @@
     padding:11px 12px; display:flex; align-items:center; gap:9px;
     margin-bottom:8px; box-shadow:0 1px 1px hsl(var(--h) 30% 85% / .4);
     touch-action:manipulation; position:relative; transition:transform .12s, box-shadow .12s;
+    user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
   }
+  .card .txt[contenteditable="true"]{ user-select:text; -webkit-user-select:text; cursor:text; }
+  body.dragging{ user-select:none !important; -webkit-user-select:none !important; cursor:grabbing; }
   .card.fill{background:var(--tint-2); border-color:transparent;}
+  /* 강조 = 진한 색 배경 + 진한 마커 (선 없음) */
+  .card.emph{ background:hsl(var(--h) 75% 91%) !important; border-color:transparent !important; }
+  .card.emph .emk.on{ color:hsl(var(--h) 82% 47%); }
   /* 강조 마커 (별 / 색 점 / 하트) — 공통 */
   .card .emk{flex:0 0 auto; width:26px;height:26px; padding:0; margin:0; line-height:0; -webkit-appearance:none; appearance:none; background:none; border:none; cursor:pointer; color:var(--faint); display:grid; place-items:center;}
   .card .emk svg{display:block; width:18px;height:18px;}
@@ -122,6 +128,16 @@
   .card .chk:hover{border-color:var(--accent-2);}
   .card .chk:active{transform:scale(.92);}
   .card.done .chk{background:var(--accent-2); border-color:var(--accent-2); color:#fff;}
+  /* 카테고리 칩 */
+  .card .cat-chip{flex:0 0 auto; max-width:104px; height:24px; padding:0 9px; display:inline-flex; align-items:center; gap:5px; border:none; border-radius:30px; background:var(--tint-2); color:var(--soft); font-size:11px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;}
+  .card .cat-chip i{width:8px;height:8px; border-radius:50%; flex:0 0 auto;}
+  .card .cat-chip:active{transform:scale(.95);}
+  .card .cat-chip.empty{background:transparent; color:var(--faint); border:1px dashed hsl(var(--h) 28% 80%);}
+  .card .cat-chip.empty:hover{color:var(--accent-3); border-color:var(--accent-2);}
+  /* 개별 to do 옮기기 버튼 */
+  .card .mv{flex:0 0 auto; width:24px;height:24px; border-radius:7px; color:var(--soft); font-size:15px; display:grid; place-items:center; background:var(--tint-2);}
+  .card .mv:hover{color:var(--accent-3);}
+  .card .mv:active{transform:scale(.9);}
   .card .txt{flex:1; min-width:0; font-size:13.5px; font-weight:600; line-height:1.3; word-break:break-word; outline:none;}
   .card.done .txt{color:var(--faint); text-decoration:line-through;}
   .card .grip{flex:0 0 auto; color:var(--faint); width:18px; display:grid; place-items:center; cursor:grab; touch-action:none; font-size:13px; letter-spacing:-2px;}
@@ -172,7 +188,8 @@
   .block-actions{display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:2px;}
   .pill{display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; color:var(--soft); background:var(--tint-2); padding:7px 12px; border-radius:30px;}
   .pill:active{transform:scale(.96);}
-  .check{width:28px;height:28px;border-radius:50%; border:1px solid var(--line); color:var(--accent-2); display:grid;place-items:center; background:var(--surface);}
+  .check{height:30px; padding:0 12px; border-radius:30px; border:1px solid var(--line); color:var(--accent-3); font-size:11.5px; font-weight:700; display:inline-flex; align-items:center; gap:5px; background:var(--surface);}
+  .check:active{transform:scale(.97);}
 
   /* ── MATRIX ───────────────────────────── */
   .matrix-grid{display:grid; grid-template-columns:minmax(0,.62fr) minmax(0,1fr); gap:18px;}
@@ -192,25 +209,25 @@
   .q4 .drop-hint{color:var(--q4-tx); opacity:.6;}
 
   /* ── REVIEW ───────────────────────────── */
-  .review-top{display:flex; gap:16px; align-items:center; background:var(--tint); border-radius:var(--radius); padding:18px; margin-bottom:16px;}
-  .ring{--p:0; width:84px;height:84px; border-radius:50%; flex:0 0 auto;
-    background:conic-gradient(var(--accent-2) calc(var(--p)*1%), var(--tint-2) 0);
-    display:grid; place-items:center; position:relative;}
-  .ring::after{content:""; position:absolute; inset:9px; background:var(--surface); border-radius:50%;}
-  .ring b{position:relative; z-index:1; font-size:20px; font-weight:800; color:var(--accent-3);}
-  .review-top .meta h3{margin:0 0 4px; font-size:15px;}
-  .review-top .meta p{margin:0; font-size:12.5px; color:var(--soft); line-height:1.5;}
-  .stat-row{display:flex; gap:10px; margin-bottom:16px;}
-  .stat{flex:1; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:12px; text-align:center;}
-  .stat .n{font-size:20px; font-weight:800; color:var(--text);}
-  .stat .l{font-size:11px; font-weight:700; color:var(--faint); margin-top:2px;}
-  .review h4{font-size:12.5px; font-weight:800; color:var(--soft); margin:18px 4px 8px; letter-spacing:.03em;}
-  .done-item{display:flex; align-items:center; gap:9px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:7px; font-size:13px; font-weight:600;}
-  .done-item .c{width:18px;height:18px;border-radius:50%; background:var(--accent); color:#fff; display:grid;place-items:center; flex:0 0 auto;}
-  .done-item.undone .c{background:var(--tint-2); color:var(--faint);}
-  .done-item.undone{color:var(--soft);}
-  .note{width:100%; min-height:96px; border:1px solid var(--line); border-radius:14px; padding:13px; font-size:13.5px; color:var(--text); resize:vertical; background:var(--surface); line-height:1.6;}
-  .note:focus{outline:none; border-color:var(--accent-2); box-shadow:0 0 0 3px hsl(var(--h) 70% 93%);}
+  /* ── REVIEW 보드 (DONE / LEFT / HOLD) ── */
+  .review-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px;}
+  .rv-col{min-width:0;}
+  .rv-zone{min-height:60px;}
+  .rv-card{background:var(--tint); border-color:transparent;}
+  .rv-card.done .chk{}
+  .rv-col.hold .rv-card{opacity:.6;}
+  .rv-col.hold .col-head h2{color:var(--faint);}
+  .rv-hint{text-align:center; color:var(--faint); font-size:12px; margin:22px 0 0;}
+  @media (max-width:760px){
+    .review-grid{grid-template-columns:1fr 1fr 1fr; gap:7px;}
+    .rv-col .col-head{margin:2px 2px 8px;}
+    .rv-col .col-head h2{font-size:11px;}
+    .rv-col .col-head .count{font-size:11px;}
+    .rv-card{padding:8px 8px; border-radius:10px; gap:6px;}
+    .rv-card .chk{width:18px;height:18px; border-radius:6px;}
+    .rv-card .chk svg{width:11px;height:11px;}
+    .rv-card .txt{font-size:11px;}
+  }
 
   /* ── 색상 설정 시트 ───────────────────── */
   .sheet-bg{position:fixed; inset:0; background:#0003; backdrop-filter:blur(2px); z-index:50; display:none;}
@@ -251,6 +268,23 @@
   .seg{display:flex; gap:6px; background:var(--tint-2); padding:4px; border-radius:13px;}
   .seg button{flex:1; height:40px; border-radius:9px; font-size:12.5px; font-weight:700; color:var(--soft); transition:.15s;}
   .seg button.on{background:#fff; color:var(--text); box-shadow:0 1px 3px hsl(var(--h) 30% 60% / .18);}
+  /* 카테고리 관리 */
+  .cat-row{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .cat-color{width:32px;height:32px; padding:0; border:1px solid var(--line); border-radius:9px; background:#fff; cursor:pointer; flex:0 0 auto;}
+  .cat-color::-webkit-color-swatch-wrapper{padding:2px;}
+  .cat-color::-webkit-color-swatch{border:none; border-radius:6px;}
+  .cat-name{flex:1; min-width:0; height:34px; border:1px solid var(--line); border-radius:9px; padding:0 10px; font-size:13px; color:var(--text); background:#fff;}
+  .cat-name:focus{outline:none; border-color:var(--accent-2);}
+  .cat-mv{width:30px;height:30px; flex:0 0 auto; border-radius:8px; background:var(--tint-2); color:var(--soft); font-size:11px;}
+  .cat-mv:disabled{opacity:.3;}
+  .cat-del{width:30px;height:30px; flex:0 0 auto; border-radius:8px; color:var(--faint); font-size:18px;}
+  .cat-del:hover{background:var(--tint-2); color:var(--q1-tx);}
+  /* 카테고리 선택 시트 */
+  .cat-pick{display:flex; align-items:center; gap:11px; width:100%; padding:13px 12px; border-radius:12px; border:1px solid var(--line); background:#fff; margin-bottom:8px; font-size:14px; font-weight:600; color:var(--text);}
+  .cat-pick .dot{width:14px;height:14px; border-radius:50%; flex:0 0 auto; border:1.5px dashed transparent;}
+  .cat-pick.none .dot{background:transparent; border-color:var(--faint);}
+  .cat-pick.on{border-color:var(--accent-2); box-shadow:0 0 0 2px hsl(var(--h) 70% 92%);}
+  .cat-pick .mark{margin-left:auto; color:var(--accent-3); font-weight:800;}
   .sheet .close{width:100%; margin-top:18px; height:48px; border-radius:14px; background:var(--accent); color:#fff; font-weight:800; font-size:14px;}
   .sheet .close:active{transform:scale(.98);}
 
@@ -373,24 +407,21 @@
 
     <!-- REVIEW -->
     <section class="view" id="view-review">
-      <div class="review">
-        <div class="review-top">
-          <div class="ring" id="ring"><b id="ringPct">0%</b></div>
-          <div class="meta">
-            <h3 id="reviewTitle">오늘의 흐름</h3>
-            <p id="reviewSub">완료한 일을 돌아보고 내일로 흘려보내세요.</p>
-          </div>
+      <div class="review-grid">
+        <div class="rv-col">
+          <div class="col-head"><h2>DONE</h2><span class="count" id="rvDoneCount">0</span></div>
+          <div class="dropzone rv-zone" data-zone="rv-done" id="rvDone"></div>
         </div>
-        <div class="stat-row">
-          <div class="stat"><div class="n" id="stTotal">0</div><div class="l">전체</div></div>
-          <div class="stat"><div class="n" id="stDone">0</div><div class="l">완료</div></div>
-          <div class="stat"><div class="n" id="stFav">0</div><div class="l">즐겨찾기</div></div>
+        <div class="rv-col">
+          <div class="col-head"><h2>LEFT</h2><span class="count" id="rvLeftCount">0</span></div>
+          <div class="dropzone rv-zone" data-zone="rv-left" id="rvLeft"></div>
         </div>
-        <h4>마무리한 일</h4>
-        <div id="reviewList"></div>
-        <h4>한 줄 회고</h4>
-        <textarea class="note" id="reviewNote" placeholder="오늘 하루는 어땠나요?"></textarea>
+        <div class="rv-col hold">
+          <div class="col-head"><h2>HOLD</h2><span class="count" id="rvHoldCount">0</span></div>
+          <div class="dropzone rv-zone" data-zone="rv-hold" id="rvHold"></div>
+        </div>
       </div>
+      <p class="rv-hint">완료 / 남은 일 / 보류로 끌어 옮기며 하루를 마무리해요</p>
     </section>
   </main>
 </div>
@@ -428,6 +459,10 @@
     </div>
     <button class="switch" id="sinkToggle" role="switch" aria-label="완료 항목 아래로 정렬"></button>
   </div>
+  <div class="sub" style="margin-top:20px">카테고리</div>
+  <p style="margin-top:-6px">이름과 색을 정하고 위/아래로 정렬할 수 있어요.</p>
+  <div id="catMgr"></div>
+  <button class="data-btn" id="catAdd" style="margin-top:8px; width:100%">+ 카테고리 추가</button>
   <div class="sub" style="margin-top:20px">데이터 백업</div>
   <p style="margin-top:-6px">모든 날짜의 할 일과 설정을 파일로 저장하거나, 다른 기기에서 불러올 수 있어요.</p>
   <div class="data-row">
@@ -439,6 +474,16 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- 카테고리 선택 시트 -->
+<div class="sheet-bg" id="catBg"></div>
+<div class="sheet" id="catSheet">
+  <div class="grab"></div>
+  <h3>카테고리</h3>
+  <p>이 할 일의 카테고리를 골라요.</p>
+  <div id="catPickList"></div>
+  <button class="close" id="catClose">닫기</button>
+</div>
 
 <script>
 "use strict";
@@ -481,6 +526,21 @@ function sortDisplay(arr){
   return arr.slice().sort((a,b)=>
     (settings().sinkDone ? (a.done?1:0)-(b.done?1:0) : 0) || (a.ord||0)-(b.ord||0)
   );
+}
+/* ── 카테고리 ─────────────────────────── */
+const DEFAULT_CATS = [
+  {id:'c1', name:'업무', color:'#f3a9c4'},
+  {id:'c2', name:'개인', color:'#a9c2ee'},
+  {id:'c3', name:'건강', color:'#9ed6b0'},
+];
+const CAT_PALETTE = ['#f3a9c4','#f7b98a','#e9cf86','#9ed6b0','#a9c2ee','#b6a9ee','#d9a9d6','#c9c9d3'];
+function cats(){ if(!Array.isArray(DB.cats)) DB.cats=[]; return DB.cats; }
+function findCat(id){ return cats().find(c=>c.id===id); }
+function catShort(n){ n=n||''; return n.length>6 ? n.slice(0,6)+'…' : n; }
+function catChipHtml(t){
+  const c = t.cat ? findCat(t.cat) : null;
+  if(c) return `<button class="cat-chip" data-cat-pick aria-label="카테고리: ${escapeHtml(c.name)} (눌러서 변경)"><i style="background:${c.color}"></i>${escapeHtml(catShort(c.name))}</button>`;
+  return `<button class="cat-chip empty" data-cat-pick aria-label="카테고리 지정">＋ 분류</button>`;
 }
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){}
@@ -565,7 +625,9 @@ function cardEl(t, o={}){
   html += `<button class="chk" data-check aria-label="완료 체크">${checkSVG()}</button>`;
   if(o.num)  html += `<span class="num">${o.num}</span>`;
   html += `<span class="txt" data-txt>${escapeHtml(t.text)}</span>`;
+  html += catChipHtml(t);
   if(o.grip) html += `<span class="grip" data-handle="1" aria-label="끌어서 정렬">⋮⋮</span>`;
+  if(o.move) html += `<button class="mv" data-move aria-label="to do로 옮기기" title="to do로 옮기기">⤴</button>`;
   html += `<button class="x" data-del aria-label="삭제">×</button>`;
   el.innerHTML = html;
   return el;
@@ -598,11 +660,10 @@ function renderFlow(){
       </div>
       <div class="dropzone" data-zone="block-${bi}"></div>
       <div class="block-actions">
-        <button class="pill" data-clear-block="${bi}">⤴ to do로 옮기기</button>
-        <button class="check" data-done-block="${bi}" aria-label="블록 완료">✓</button>
+        <button class="check" data-done-block="${bi}" aria-label="블록 전체 완료">✓ 전체 완료</button>
       </div>`;
     const dz = wrap.querySelector('.dropzone');
-    items.forEach(t=> dz.appendChild(cardEl(t,{fillFav:true})) );
+    items.forEach(t=> dz.appendChild(cardEl(t,{fillFav:true, move:true})) );
     if(!items.length) dz.innerHTML = `<div class="empty">ORDER에서 끌어다 놓기</div>`;
     panel.appendChild(wrap);
   });
@@ -631,23 +692,32 @@ function renderMatrix(){
 
 function renderReview(){
   const all = tasks();
-  const total = all.length, done = all.filter(t=>t.done).length, fav = all.filter(t=>t.fav).length;
-  const pct = total ? Math.round(done/total*100) : 0;
-  $('#stTotal').textContent=total; $('#stDone').textContent=done; $('#stFav').textContent=fav;
-  $('#ring').style.setProperty('--p', pct);
-  $('#ringPct').textContent = pct+'%';
-  $('#reviewSub').textContent = total===0 ? '아직 오늘의 할 일이 없어요.'
-      : (pct===100 ? '오늘 할 일을 모두 끝냈어요. 잘했어요!' : `${total}개 중 ${done}개를 마쳤어요.`);
-  const list = $('#reviewList'); list.innerHTML='';
-  if(!all.length){ list.innerHTML = `<div class="empty">기록할 일이 없어요</div>`; }
-  [...all].sort((a,b)=>(b.done?1:0)-(a.done?1:0)).forEach(t=>{
-    const el=document.createElement('div');
-    el.className='done-item'+(t.done?'':' undone');
-    el.innerHTML = `<span class="c">${t.done?'✓':''}</span><span>${escapeHtml(t.text)}</span>`;
-    list.appendChild(el);
+  const buckets = { done:[], left:[], hold:[] };
+  all.forEach(t=>{
+    if(t.hold) buckets.hold.push(t);
+    else if(t.done) buckets.done.push(t);
+    else buckets.left.push(t);
   });
-  const note=$('#reviewNote');
-  if(document.activeElement!==note) note.value = day().note||'';
+  const fill = (zoneId, arr, emptyMsg)=>{
+    const z = document.getElementById(zoneId); if(!z) return;
+    z.innerHTML='';
+    sortDisplay(arr).forEach(t=> z.appendChild(reviewCardEl(t)) );
+    if(!arr.length) z.innerHTML = `<div class="empty">${emptyMsg}</div>`;
+  };
+  fill('rvDone', buckets.done, '여기로 드롭');
+  fill('rvLeft', buckets.left, '여기로 드롭');
+  fill('rvHold', buckets.hold, '여기로 드롭');
+  $('#rvDoneCount').textContent = buckets.done.length;
+  $('#rvLeftCount').textContent = buckets.left.length;
+  $('#rvHoldCount').textContent = buckets.hold.length;
+}
+function reviewCardEl(t){
+  const el = document.createElement('div');
+  el.className = 'card rv-card' + (t.done?' done':'') + (t.hold?' held':'');
+  el.dataset.id = t.id; el.dataset.card = '1';
+  el.innerHTML = `<button class="chk" data-check aria-label="완료 체크">${checkSVG()}</button>`+
+                 `<span class="txt" data-txt>${escapeHtml(t.text)}</span>`;
+  return el;
 }
 
 /* ── 이벤트: 추가/삭제/완료/즐겨찾기/편집 ── */
@@ -658,7 +728,16 @@ document.addEventListener('click', e=>{
     addTask(inp.value); inp.value=''; inp.focus(); return;
   }
   const del = e.target.closest('[data-del]');
-  if(del){ const id=del.closest('[data-id]').dataset.id; removeTask(id); return; }
+  if(del){
+    const id=del.closest('[data-id]').dataset.id; const t=findTask(id);
+    const name=t?t.text:'이 할 일';
+    if(confirm(`'${name}'\n삭제할까요?`)) removeTask(id);
+    return;
+  }
+  const mv = e.target.closest('[data-move]');
+  if(mv){ const t=findTask(mv.closest('[data-id]').dataset.id); if(t){ t.block=null; save(); render(); toast('ORDER로 옮겼어요'); } return; }
+  const cp = e.target.closest('[data-cat-pick]');
+  if(cp){ openCatPicker(cp.closest('[data-id]').dataset.id); return; }
   const fav = e.target.closest('[data-fav]');
   if(fav){ toggleFav(fav.closest('[data-id]').dataset.id); return; }
   const chk = e.target.closest('[data-check]');
@@ -729,9 +808,6 @@ function shiftDay(n){ const d=keyToDate(cur); d.setDate(d.getDate()+n); cur=toda
 $('#prevDay').onclick=()=>shiftDay(-1);
 $('#nextDay').onclick=()=>shiftDay(1);
 
-/* ── 회고 메모 ───────────────────────── */
-$('#reviewNote').addEventListener('input', e=>{ day().note=e.target.value; save(); });
-
 /* ── 색상 설정 시트 ──────────────────── */
 const PRESETS = [
   {n:'로즈',h:342},{n:'코랄',h:8},{n:'피치',h:24},{n:'머스타드',h:44},
@@ -759,7 +835,7 @@ function syncOpts(){
   const sk=$('#sinkToggle'); if(sk) sk.classList.toggle('on', !!settings().sinkDone);
   $$('#emphSeg [data-emph]').forEach(b=> b.classList.toggle('on', b.dataset.emph===settings().emph) );
 }
-function openSheet(){ $('#sheetBg').classList.add('on'); $('#sheet').classList.add('on'); buildSwatches(); syncOpts(); }
+function openSheet(){ $('#sheetBg').classList.add('on'); $('#sheet').classList.add('on'); buildSwatches(); syncOpts(); buildCatManager(); }
 function closeSheet(){ $('#sheetBg').classList.remove('on'); $('#sheet').classList.remove('on'); }
 $('#openSettings').onclick=openSheet;
 $('#closeSheet').onclick=closeSheet;
@@ -771,6 +847,71 @@ $('#emphSeg').addEventListener('click', e=>{
   const b=e.target.closest('[data-emph]'); if(!b) return;
   settings().emph=b.dataset.emph; save(); syncOpts(); render();
 });
+
+/* ── 카테고리 관리 ───────────────────── */
+function buildCatManager(){
+  const box=$('#catMgr'); if(!box) return; box.innerHTML='';
+  const list=cats();
+  if(!list.length){ box.innerHTML=`<div class="empty">카테고리가 없어요. 아래에서 추가하세요.</div>`; return; }
+  list.forEach((c,i)=>{
+    const row=document.createElement('div'); row.className='cat-row';
+    row.innerHTML=
+      `<input type="color" class="cat-color" value="${c.color}" data-cat-color="${c.id}" aria-label="색상"/>`+
+      `<input type="text" class="cat-name" value="${escapeHtml(c.name)}" data-cat-name="${c.id}" placeholder="카테고리 이름"/>`+
+      `<button class="cat-mv" data-cat-up="${c.id}" aria-label="위로" ${i===0?'disabled':''}>▲</button>`+
+      `<button class="cat-mv" data-cat-down="${c.id}" aria-label="아래로" ${i===list.length-1?'disabled':''}>▼</button>`+
+      `<button class="cat-del" data-cat-del="${c.id}" aria-label="삭제">×</button>`;
+    box.appendChild(row);
+  });
+}
+function moveCat(id, dir){
+  const a=cats(); const i=a.findIndex(c=>c.id===id); const j=i+dir;
+  if(i<0||j<0||j>=a.length) return;
+  [a[i],a[j]]=[a[j],a[i]]; save(); buildCatManager(); render();
+}
+function delCat(id){
+  const c=findCat(id);
+  if(!confirm(`'${c?c.name:'카테고리'}' 카테고리를 삭제할까요?\n이 카테고리로 분류된 할 일은 분류가 해제돼요.`)) return;
+  DB.cats=cats().filter(c=>c.id!==id);
+  Object.values(DB.days||{}).forEach(d=>(d.tasks||[]).forEach(t=>{ if(t.cat===id) t.cat=null; }));
+  save(); buildCatManager(); render();
+}
+function addCat(){
+  const color=CAT_PALETTE[cats().length % CAT_PALETTE.length];
+  cats().push({id:'c'+Date.now().toString(36), name:'새 카테고리', color});
+  save(); buildCatManager(); render();
+}
+$('#catMgr').addEventListener('input', e=>{
+  const cc=e.target.closest('[data-cat-color]'); if(cc){ const c=findCat(cc.dataset.catColor); if(c){ c.color=cc.value; save(); render(); } return; }
+  const cn=e.target.closest('[data-cat-name]'); if(cn){ const c=findCat(cn.dataset.catName); if(c){ c.name=cn.value; save(); render(); } return; }
+});
+$('#catMgr').addEventListener('click', e=>{
+  const up=e.target.closest('[data-cat-up]');   if(up){ moveCat(up.dataset.catUp,-1); return; }
+  const dn=e.target.closest('[data-cat-down]'); if(dn){ moveCat(dn.dataset.catDown,1); return; }
+  const dl=e.target.closest('[data-cat-del]');  if(dl){ delCat(dl.dataset.catDel); return; }
+});
+$('#catAdd').onclick=addCat;
+
+/* ── 카테고리 선택 시트 ──────────────── */
+let pickTaskId=null;
+function openCatPicker(taskId){
+  pickTaskId=taskId; const t=findTask(taskId);
+  const box=$('#catPickList'); box.innerHTML='';
+  const mk=(id, name, colorHtml, isNone)=>{
+    const on = isNone ? !t.cat : (t.cat===id);
+    const el=document.createElement('button');
+    el.className='cat-pick'+(isNone?' none':'')+(on?' on':'');
+    el.innerHTML = `<span class="dot" ${isNone?'':`style="background:${colorHtml}"`}></span><span>${escapeHtml(name)}</span>${on?'<span class="mark">✓</span>':''}`;
+    el.onclick=()=>{ t.cat = isNone ? null : id; save(); render(); closeCatPicker(); };
+    box.appendChild(el);
+  };
+  cats().forEach(c=> mk(c.id, c.name, c.color, false) );
+  mk(null,'없음', null, true);
+  $('#catBg').classList.add('on'); $('#catSheet').classList.add('on');
+}
+function closeCatPicker(){ pickTaskId=null; $('#catBg').classList.remove('on'); $('#catSheet').classList.remove('on'); }
+$('#catClose').onclick=closeCatPicker;
+$('#catBg').onclick=closeCatPicker;
 
 /* ── 데이터 백업 / 불러오기 ──────────── */
 function exportData(){
@@ -795,6 +936,7 @@ function importData(file){
     DB = data;
     if(DB.hue==null) DB.hue = 342;
     if(!DB.opts) DB.opts = { hideScheduled:true };
+    if(DB.cats===undefined) DB.cats = [];
     cur = todayKey();
     save(); setHue(DB.hue); buildSwatches(); syncOpts(); render();
     toast('백업을 불러왔어요'); closeSheet();
@@ -828,7 +970,7 @@ document.addEventListener('pointerdown', e=>{
   const handle = e.target.closest('[data-handle]');
   const card   = e.target.closest('[data-card]');
   if(!card) return;
-  if(e.target.closest('[data-fav],[data-del],[data-check]')) return;   // 버튼은 제외
+  if(e.target.closest('[data-fav],[data-del],[data-check],[data-move],[data-cat-pick]')) return;   // 버튼은 제외
   const id = card.dataset.id;
   const immediate = !!handle;
   drag = {
@@ -862,6 +1004,8 @@ document.addEventListener('pointercancel', ()=>{ if(drag){ if(drag.started) clea
 
 function begin(x,y){
   drag.started=true;
+  document.body.classList.add('dragging');
+  const sel=window.getSelection&&window.getSelection(); if(sel){ try{sel.removeAllRanges();}catch(_){} }
   const r=drag.card.getBoundingClientRect();
   drag.ox=x-r.left; drag.oy=y-r.top; drag.w=r.width;
   const g=drag.card.cloneNode(true);
@@ -909,7 +1053,9 @@ function drop(x,y){
       t.block=+z.split('-')[1]; reorderInto(zone, t);
     } else if(z.startsWith('q')){
       t.q=z;
-    }
+    } else if(z==='rv-done'){ t.done=true;  t.hold=false; }
+    else if(z==='rv-left'){ t.done=false; t.hold=false; }
+    else if(z==='rv-hold'){ t.hold=true;  t.done=false; }
     save();
   }
   render();
@@ -933,6 +1079,7 @@ function reorderInto(zone, t){
 }
 
 function cleanup(silent){
+  document.body.classList.remove('dragging');
   if(drag){
     if(drag.ghost) drag.ghost.remove();
     if(drag.card) drag.card.classList.remove('ghosting');
@@ -942,27 +1089,26 @@ function cleanup(silent){
   $$('.empty').forEach(e=>e.style.display='');
   drag=null;
 }
+// 드래그 중 텍스트 선택 차단
+document.addEventListener('selectstart', e=>{ if(drag && drag.started) e.preventDefault(); });
 
 /* ── 초기 구동 ───────────────────────── */
-function seedIfEmpty(){
-  // 처음 켰을 때만 예시 데이터로 분위기 보여주기 (필요 없으면 카드를 ×로 지우면 됨)
-  if(Object.keys(DB.days).length) return;
-  const d=day();
-  const ex=[
-    {t:'가이드 작성',         b:null, q:'q1'},
-    {t:'데이플로우 위젯',     b:null, q:'q1', f:true},
-    {t:'콘텐츠 이미지 찍기',  b:null, q:'q3'},
-    {t:'프로젝트 위젯',       b:null, q:'q1'},
-    {t:'운동 가기',           b:null, q:'q2'},
-    {t:'위젯 제작',           b:null, q:'q1', f:true},
-    {t:'집 치우기',           b:null, q:null, f:true},
-    {t:'점심 도시락',         b:0,    q:'q2'},
-    {t:'저녁 영화 약속',      b:2,    q:'q2'},
-  ];
-  ex.forEach((e,i)=> d.tasks.push({id:uid(), text:e.t, done:false, fav:!!e.f, q:e.q, block:e.b, ord:i}) );
+// 이전 버전에서 자동으로 넣었던 예시 데이터를 1회 정리 (직접 추가/수정한 항목은 유지)
+function clearSeedExamples(){
+  if(DB.seedCleared){ return; }
+  const SEED_TEXTS = new Set(['가이드 작성','데이플로우 위젯','콘텐츠 이미지 찍기','프로젝트 위젯','운동 가기','위젯 제작','집 치우기','점심 도시락','저녁 영화 약속']);
+  Object.values(DB.days||{}).forEach(d=>{
+    if(Array.isArray(d.tasks)) d.tasks = d.tasks.filter(t=> !SEED_TEXTS.has((t.text||'').trim()));
+  });
+  // 손대지 않은 기본 예시 카테고리(c1/c2/c3 + 기본 이름·색)만 제거
+  const isDefaultCat = c => DEFAULT_CATS.some(dc => dc.id===c.id && dc.name===c.name && dc.color===c.color);
+  if(Array.isArray(DB.cats)) DB.cats = DB.cats.filter(c=> !isDefaultCat(c));
+  // 사라진 카테고리를 참조하던 할 일의 분류 해제
+  Object.values(DB.days||{}).forEach(d=> (d.tasks||[]).forEach(t=>{ if(t.cat && !findCat(t.cat)) t.cat=null; }));
+  DB.seedCleared = true;
   save();
 }
-seedIfEmpty();
+clearSeedExamples();
 setHue(DB.hue||342);
 render();
 updateClock();
