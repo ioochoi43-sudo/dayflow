@@ -235,8 +235,9 @@
   .sheet{
     position:fixed; left:50%; bottom:0; transform:translateX(-50%) translateY(100%);
     width:min(460px,100%); background:var(--surface); border-radius:24px 24px 0 0;
-    padding:20px 20px calc(20px + env(safe-area-inset-bottom)); z-index:51; transition:transform .28s cubic-bezier(.2,.9,.3,1);
+    padding:20px 20px calc(24px + env(safe-area-inset-bottom)); z-index:51; transition:transform .28s cubic-bezier(.2,.9,.3,1);
     box-shadow:0 -8px 40px #0002;
+    max-height:88vh; max-height:88dvh; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch;
   }
   .sheet.on{transform:translateX(-50%) translateY(0);}
   .sheet .grab{width:38px;height:4px;border-radius:4px; background:var(--line); margin:0 auto 16px;}
