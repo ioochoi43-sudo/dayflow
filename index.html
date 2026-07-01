@@ -107,14 +107,13 @@
     background:var(--surface); border:1px solid var(--line); border-radius:14px;
     padding:11px 12px; display:flex; align-items:center; gap:9px;
     margin-bottom:8px; box-shadow:0 1px 1px hsl(var(--h) 30% 85% / .4);
-    touch-action:manipulation; position:relative; transition:transform .12s, box-shadow .12s;
+    touch-action:pan-y; position:relative; transition:transform .12s, box-shadow .12s;
     user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
   }
   .card .txt[contenteditable="true"]{ user-select:text; -webkit-user-select:text; cursor:text; }
   body.dragging{ user-select:none !important; -webkit-user-select:none !important; cursor:grabbing; }
   .card.fill{background:var(--tint-2); border-color:transparent;}
-  /* 강조 = 진한 색 배경 + 진한 마커 (선 없음) */
-  .card.emph{ background:hsl(var(--h) 75% 91%) !important; border-color:transparent !important; }
+  /* 강조 = 카테고리/테마 색을 진하게 (배경은 JS 인라인) + 마커 진하게 */
   .card.emph .emk.on{ color:hsl(var(--h) 82% 47%); }
   /* 강조 마커 (별 / 색 점 / 하트) — 공통 */
   .card .emk{flex:0 0 auto; width:26px;height:26px; padding:0; margin:0; line-height:0; -webkit-appearance:none; appearance:none; background:none; border:none; cursor:pointer; color:var(--faint); display:grid; place-items:center;}
@@ -129,8 +128,7 @@
   .card .chk:active{transform:scale(.92);}
   .card.done .chk{background:var(--accent-2); border-color:var(--accent-2); color:#fff;}
   /* 카테고리 칩 */
-  .card .cat-chip{flex:0 0 auto; max-width:104px; height:24px; padding:0 9px; display:inline-flex; align-items:center; gap:5px; border:none; border-radius:30px; background:var(--tint-2); color:var(--soft); font-size:11px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;}
-  .card .cat-chip i{width:8px;height:8px; border-radius:50%; flex:0 0 auto;}
+  .card .cat-chip{flex:0 0 auto; max-width:104px; height:24px; padding:0 9px; display:inline-flex; align-items:center; gap:5px; border:none; border-radius:30px; background:#ffffffb3; color:var(--soft); font-size:11px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;}
   .card .cat-chip:active{transform:scale(.95);}
   .card .cat-chip.empty{background:transparent; color:var(--faint); border:1px dashed hsl(var(--h) 28% 80%);}
   .card .cat-chip.empty:hover{color:var(--accent-3); border-color:var(--accent-2);}
@@ -140,7 +138,8 @@
   .card .mv:active{transform:scale(.9);}
   .card .txt{flex:1; min-width:0; font-size:13.5px; font-weight:600; line-height:1.3; word-break:break-word; outline:none;}
   .card.done .txt{color:var(--faint); text-decoration:line-through;}
-  .card .grip{flex:0 0 auto; color:var(--faint); width:18px; display:grid; place-items:center; cursor:grab; touch-action:none; font-size:13px; letter-spacing:-2px;}
+  .card .grip{flex:0 0 auto; color:var(--faint); width:30px; height:34px; margin:-6px -4px -6px 0; display:grid; place-items:center; cursor:grab; touch-action:none; font-size:15px; letter-spacing:-2px;}
+  .card .grip:active{cursor:grabbing; color:var(--accent-3);}
   .card .num{flex:0 0 auto; font-size:11px; font-weight:800; color:var(--faint); min-width:12px; text-align:center;}
   .card .x{flex:0 0 auto; width:20px;height:20px;border-radius:6px; color:var(--faint); display:grid;place-items:center; font-size:15px; opacity:0; transition:.15s;}
   .card:hover .x{opacity:.7;}
@@ -201,10 +200,10 @@
   .quad-head .tags{margin-left:auto; display:flex; gap:4px;}
   .tag{font-size:9.5px; font-weight:800; padding:3px 7px; border-radius:20px; color:#fff;}
   .quad .card{background:#ffffffd9; border-color:#ffffff;}
-  .q1{background:var(--q1-bg);} .q1 .q-name,.q1 .q-ico{color:var(--q1-tx);} .q1 .tag{background:var(--q1-ac);}
-  .q2{background:var(--q2-bg);} .q2 .q-name,.q2 .q-ico{color:var(--q2-tx);} .q2 .tag{background:var(--q2-ac);}
-  .q3{background:var(--q3-bg);} .q3 .q-name,.q3 .q-ico{color:var(--q3-tx);} .q3 .tag{background:var(--q3-ac);}
-  .q4{background:var(--q4-bg);} .q4 .q-name,.q4 .q-ico{color:var(--q4-tx);} .q4 .tag{background:var(--q4-ac);}
+  .q1{background:var(--q1-bg);} .q1 .q-name,.q1 .q-ico{color:var(--q1-tx);} .q1 .tag{background:var(--q1-ac); color:var(--q1-tagtx);}
+  .q2{background:var(--q2-bg);} .q2 .q-name,.q2 .q-ico{color:var(--q2-tx);} .q2 .tag{background:var(--q2-ac); color:var(--q2-tagtx);}
+  .q3{background:var(--q3-bg);} .q3 .q-name,.q3 .q-ico{color:var(--q3-tx);} .q3 .tag{background:var(--q3-ac); color:var(--q3-tagtx);}
+  .q4{background:var(--q4-bg);} .q4 .q-name,.q4 .q-ico{color:var(--q4-tx);} .q4 .tag{background:var(--q4-ac); color:var(--q4-tagtx);}
   .tag.off{background:#ffffff; color:var(--faint); box-shadow:inset 0 0 0 1.5px currentColor;}
   .q4 .drop-hint{color:var(--q4-tx); opacity:.6;}
 
@@ -213,7 +212,8 @@
   .review-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px;}
   .rv-col{min-width:0;}
   .rv-zone{min-height:60px;}
-  .rv-card{background:var(--tint); border-color:transparent;}
+  .rv-card{background:var(--tint); border-color:transparent; touch-action:none; cursor:grab;}
+  .rv-card:active{cursor:grabbing;}
   .rv-card.done .chk{}
   .rv-col.hold .rv-card{opacity:.6;}
   .rv-col.hold .col-head h2{color:var(--faint);}
@@ -279,6 +279,8 @@
   .cat-mv:disabled{opacity:.3;}
   .cat-del{width:30px;height:30px; flex:0 0 auto; border-radius:8px; color:var(--faint); font-size:18px;}
   .cat-del:hover{background:var(--tint-2); color:var(--q1-tx);}
+  .qc-row{display:flex; align-items:center; gap:10px; margin-bottom:8px;}
+  .qc-row span{font-size:13px; font-weight:600; color:var(--text);}
   /* 카테고리 선택 시트 */
   .cat-pick{display:flex; align-items:center; gap:11px; width:100%; padding:13px 12px; border-radius:12px; border:1px solid var(--line); background:#fff; margin-bottom:8px; font-size:14px; font-weight:600; color:var(--text);}
   .cat-pick .dot{width:14px;height:14px; border-radius:50%; flex:0 0 auto; border:1.5px dashed transparent;}
@@ -444,6 +446,14 @@
     <button data-emph="dot">● 색 점</button>
     <button data-emph="heart">♥ 하트</button>
   </div>
+  <div class="sub" style="margin-top:20px">MATRIX 사분면 색상</div>
+  <div id="quadColors">
+    <div class="qc-row"><input type="color" class="cat-color" data-quad="q1"><span>일단 이것부터</span></div>
+    <div class="qc-row"><input type="color" class="cat-color" data-quad="q2"><span>시간 빼두기</span></div>
+    <div class="qc-row"><input type="color" class="cat-color" data-quad="q3"><span>얼른 처리하기</span></div>
+    <div class="qc-row"><input type="color" class="cat-color" data-quad="q4"><span>패스</span></div>
+    <button class="data-btn" id="quadReset" style="width:100%; margin-top:6px">사분면 색상 기본값으로</button>
+  </div>
   <div class="sub" style="margin-top:20px">표시 옵션</div>
   <div class="opt-row">
     <div class="opt-txt">
@@ -539,9 +549,37 @@ function findCat(id){ return cats().find(c=>c.id===id); }
 function catShort(n){ n=n||''; return n.length>6 ? n.slice(0,6)+'…' : n; }
 function catChipHtml(t){
   const c = t.cat ? findCat(t.cat) : null;
-  if(c) return `<button class="cat-chip" data-cat-pick aria-label="카테고리: ${escapeHtml(c.name)} (눌러서 변경)"><i style="background:${c.color}"></i>${escapeHtml(catShort(c.name))}</button>`;
+  if(c) return `<button class="cat-chip" data-cat-pick aria-label="카테고리: ${escapeHtml(c.name)} (눌러서 변경)">${escapeHtml(catShort(c.name))}</button>`;
   return `<button class="cat-chip empty" data-cat-pick aria-label="카테고리 지정">＋ 분류</button>`;
 }
+// 색 계산: 흰색과 t(0~1)만큼 섞기 (t 클수록 연함)
+function hexToRgb(h){ h=(h||'').replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); const n=parseInt(h||'0',16)||0; return [(n>>16)&255,(n>>8)&255,n&255]; }
+function mixWhite(hex, t){ const [r,g,b]=hexToRgb(hex); const m=v=>Math.round(v+(255-v)*t); return `rgb(${m(r)},${m(g)},${m(b)})`; }
+function mixBlack(hex, t){ const [r,g,b]=hexToRgb(hex); const m=v=>Math.round(v*(1-t)); return `rgb(${m(r)},${m(g)},${m(b)})`; }
+function luminance(hex){ const [r,g,b]=hexToRgb(hex).map(v=>v/255); return 0.2126*r+0.7152*g+0.0722*b; }
+/* 사분면 색상 (사용자 지정) */
+const DEFAULT_QUAD = { q1:'#f3a9c4', q2:'#a9c2ee', q3:'#e9cf86', q4:'#c9c9d3' };
+const QUAD_LABELS = { q1:'일단 이것부터', q2:'시간 빼두기', q3:'얼른 처리하기', q4:'패스' };
+function quadColors(){ if(!DB.opts) DB.opts={}; if(!DB.opts.quadColors) DB.opts.quadColors={}; return {...DEFAULT_QUAD, ...DB.opts.quadColors}; }
+function applyQuadColors(){
+  const root=document.documentElement, qc=quadColors();
+  QUADS.forEach(q=>{
+    const base=qc[q]||DEFAULT_QUAD[q];
+    root.style.setProperty(`--${q}-bg`, mixWhite(base, 0.70));                 // 배경 더 진하게
+    root.style.setProperty(`--${q}-ac`, base);
+    root.style.setProperty(`--${q}-tx`, mixBlack(base, 0.45));
+    // 태그 글자색: 밝은 색이면 어두운 글자, 어두운 색이면 흰 글자
+    root.style.setProperty(`--${q}-tagtx`, luminance(base) < 0.5 ? '#ffffff' : mixBlack(base, 0.58));
+  });
+}
+// 할 일 박스 배경: 카테고리 색 기반, 강조면 더 진하게
+function cardBg(t){
+  const c = t.cat ? findCat(t.cat) : null;
+  if(c) return t.fav ? mixWhite(c.color, 0.40) : mixWhite(c.color, 0.80);   // 강조=진하게 / 기본=연하게
+  if(t.fav) return `hsl(${DB.hue||342} 78% 88%)`;                           // 카테고리 없을 때 강조=테마 진한색
+  return null;                                                              // 기본 배경(CSS) 사용
+}
+function applyBg(el, t){ const bg=cardBg(t); if(bg){ el.style.background=bg; el.style.borderColor='transparent'; } }
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){}
   flashSaved();
@@ -630,6 +668,7 @@ function cardEl(t, o={}){
   if(o.move) html += `<button class="mv" data-move aria-label="to do로 옮기기" title="to do로 옮기기">⤴</button>`;
   html += `<button class="x" data-del aria-label="삭제">×</button>`;
   el.innerHTML = html;
+  applyBg(el, t);
   return el;
 }
 function escapeHtml(s){ return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -663,7 +702,7 @@ function renderFlow(){
         <button class="check" data-done-block="${bi}" aria-label="블록 전체 완료">✓ 전체 완료</button>
       </div>`;
     const dz = wrap.querySelector('.dropzone');
-    items.forEach(t=> dz.appendChild(cardEl(t,{fillFav:true, move:true})) );
+    items.forEach(t=> dz.appendChild(cardEl(t,{fillFav:true, move:true, grip:true})) );
     if(!items.length) dz.innerHTML = `<div class="empty">ORDER에서 끌어다 놓기</div>`;
     panel.appendChild(wrap);
   });
@@ -673,7 +712,7 @@ function renderMatrix(){
   const all = tasks();
   const inbox = sortDisplay(all.filter(t=>!t.q));
   const z = $('#inboxZone'); z.innerHTML='';
-  inbox.forEach(t=> z.appendChild(cardEl(t,{fillFav:true})) );
+  inbox.forEach(t=> z.appendChild(cardEl(t,{fillFav:true, grip:true})) );
   if(!inbox.length) z.innerHTML = `<div class="empty">모두 분류했어요 ✦</div>`;
   $('#inboxCount').textContent = inbox.length;
 
@@ -681,7 +720,7 @@ function renderMatrix(){
     const dz = document.querySelector(`[data-zone="${q}"]`);
     dz.innerHTML='';
     const items = sortDisplay(all.filter(t=>t.q===q));
-    items.forEach(t=> dz.appendChild(cardEl(t,{fillFav:true})) );
+    items.forEach(t=> dz.appendChild(cardEl(t,{fillFav:true, grip:true})) );
     if(!items.length){
       dz.innerHTML = q==='q4'
         ? `<div class="empty drop-hint">여기로 드롭</div>`
@@ -714,9 +753,10 @@ function renderReview(){
 function reviewCardEl(t){
   const el = document.createElement('div');
   el.className = 'card rv-card' + (t.done?' done':'') + (t.hold?' held':'');
-  el.dataset.id = t.id; el.dataset.card = '1';
+  el.dataset.id = t.id; el.dataset.card = '1'; el.dataset.handle = '1';
   el.innerHTML = `<button class="chk" data-check aria-label="완료 체크">${checkSVG()}</button>`+
                  `<span class="txt" data-txt>${escapeHtml(t.text)}</span>`;
+  applyBg(el, t);
   return el;
 }
 
@@ -835,7 +875,7 @@ function syncOpts(){
   const sk=$('#sinkToggle'); if(sk) sk.classList.toggle('on', !!settings().sinkDone);
   $$('#emphSeg [data-emph]').forEach(b=> b.classList.toggle('on', b.dataset.emph===settings().emph) );
 }
-function openSheet(){ $('#sheetBg').classList.add('on'); $('#sheet').classList.add('on'); buildSwatches(); syncOpts(); buildCatManager(); }
+function openSheet(){ $('#sheetBg').classList.add('on'); $('#sheet').classList.add('on'); buildSwatches(); syncOpts(); syncQuad(); buildCatManager(); }
 function closeSheet(){ $('#sheetBg').classList.remove('on'); $('#sheet').classList.remove('on'); }
 $('#openSettings').onclick=openSheet;
 $('#closeSheet').onclick=closeSheet;
@@ -847,6 +887,15 @@ $('#emphSeg').addEventListener('click', e=>{
   const b=e.target.closest('[data-emph]'); if(!b) return;
   settings().emph=b.dataset.emph; save(); syncOpts(); render();
 });
+
+/* ── 사분면 색상 ─────────────────────── */
+function syncQuad(){ QUADS.forEach(q=>{ const inp=document.querySelector(`[data-quad="${q}"]`); if(inp) inp.value=quadColors()[q]; }); }
+$('#quadColors').addEventListener('input', e=>{
+  const inp=e.target.closest('[data-quad]'); if(!inp) return;
+  if(!DB.opts) DB.opts={}; if(!DB.opts.quadColors) DB.opts.quadColors={};
+  DB.opts.quadColors[inp.dataset.quad]=inp.value; save(); applyQuadColors();
+});
+$('#quadReset').onclick=()=>{ if(DB.opts) DB.opts.quadColors={}; save(); applyQuadColors(); syncQuad(); };
 
 /* ── 카테고리 관리 ───────────────────── */
 function buildCatManager(){
@@ -957,50 +1006,42 @@ let toastT;
 function toast(msg){ const el=$('#toast'); el.textContent=msg; el.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('on'),1600); }
 
 /* ── 드래그 & 드롭 (마우스 + 터치) ───────────────────────────
-   - data-handle: 즉시 드래그 (ORDER 그립)
-   - data-card  : 길게 눌러 드래그 (180ms), 그 전 움직이면 스크롤
-   드롭 존: [data-zone] = order|inbox|block-N|q1..q4
+   포인터 이벤트에서는 preventDefault로 스크롤을 못 막고 touch-action만 가능.
+   → 드래그는 반드시 [data-handle](touch-action:none)에서 시작. 카드 본문은 스크롤 전용.
+   리뷰 카드는 카드 전체가 handle(짧은 목록이라 스크롤은 여백/헤더로).
+   드롭 존: [data-zone] = order|inbox|block-N|q1..q4|rv-done|rv-left|rv-hold
    ───────────────────────────────────────────────────────────── */
 let drag=null;
-const HOLD=180, MOVE=8;
+const MOVE=6;
 
 document.addEventListener('pointerdown', e=>{
   if(e.button && e.button!==0) return;
   if(e.target.closest('[contenteditable="true"]')) return;
+  if(e.target.closest('[data-fav],[data-del],[data-check],[data-move],[data-cat-pick]')) return; // 버튼 제외
   const handle = e.target.closest('[data-handle]');
   const card   = e.target.closest('[data-card]');
   if(!card) return;
-  if(e.target.closest('[data-fav],[data-del],[data-check],[data-move],[data-cat-pick]')) return;   // 버튼은 제외
-  const id = card.dataset.id;
-  const immediate = !!handle;
-  drag = {
-    id, card, immediate, started:false,
-    sx:e.clientX, sy:e.clientY, ghost:null, ph:null,
-    holdTimer: immediate?null:setTimeout(()=>{ if(drag&&drag.id===id) begin(e.clientX,e.clientY); }, HOLD)
-  };
+  drag = { id:card.dataset.id, card, handle:!!handle, started:false, moved:false,
+           sx:e.clientX, sy:e.clientY, pid:e.pointerId, ghost:null, ph:null };
+  if(handle){ try{ handle.setPointerCapture(e.pointerId); }catch(_){} }
 }, {passive:true});
 
 document.addEventListener('pointermove', e=>{
-  if(!drag) return;
-  const dx=e.clientX-drag.sx, dy=e.clientY-drag.sy, dist=Math.hypot(dx,dy);
-  if(!drag.started){
-    if(drag.immediate && dist>MOVE){ begin(e.clientX,e.clientY); }
-    else if(!drag.immediate && dist>MOVE){ clearTimeout(drag.holdTimer); /* 스크롤로 간주 */
-      // 길게 누르기 전에 움직였다면, 그립이 아니면 드래그 취소(=스크롤 허용)
-      if(!drag.started){ drag=null; return; }
-    }
-  }
+  if(!drag || (drag.pid!=null && e.pointerId!==drag.pid)) return;
+  const dist=Math.hypot(e.clientX-drag.sx, e.clientY-drag.sy);
+  if(dist>3) drag.moved=true;
+  if(!drag.handle) return;                 // 본문 터치는 네이티브 스크롤에 맡김
+  if(!drag.started && dist>MOVE) begin(e.clientX,e.clientY);
   if(drag.started){ e.preventDefault(); moveGhost(e.clientX,e.clientY); }
 }, {passive:false});
 
 document.addEventListener('pointerup', e=>{
   if(!drag) return;
-  clearTimeout(drag.holdTimer);
-  if(drag.started){ drop(e.clientX,e.clientY); }
-  else { handleCardTap(drag.id, drag.card); }       // 드래그 아니면 탭
+  if(drag.started) drop(e.clientX,e.clientY);
+  else if(!drag.moved) handleCardTap(drag.id, drag.card);   // 움직임 없으면 탭
   cleanup();
 });
-document.addEventListener('pointercancel', ()=>{ if(drag){ if(drag.started) cleanup(true); else { clearTimeout(drag.holdTimer); drag=null; } } });
+document.addEventListener('pointercancel', ()=>{ cleanup(); });
 
 function begin(x,y){
   drag.started=true;
@@ -1110,6 +1151,7 @@ function clearSeedExamples(){
 }
 clearSeedExamples();
 setHue(DB.hue||342);
+applyQuadColors();
 render();
 updateClock();
 setInterval(updateClock, 1000);
