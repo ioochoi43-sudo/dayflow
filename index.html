@@ -49,7 +49,7 @@
 
   /* ── 앱 셸(브라우저 창 프레임 = 시그니처) ───────────────── */
   .app{
-    max-width:1040px; margin:0 auto; min-height:100dvh;
+    max-width:none; width:100%; margin:0 auto; min-height:100dvh;
     display:flex; flex-direction:column;
     background:var(--surface);
     box-shadow:var(--shadow);
@@ -95,6 +95,7 @@
   /* ── 본문 ─────────────────────────────────────── */
   main{flex:1; min-height:0; position:relative;}
   .view{display:none; padding:16px 14px 120px;}
+  @media (min-width:900px){ .view{padding:22px 36px 120px;} .chrome{padding-left:28px; padding-right:28px;} }
   .view.on{display:block; animation:fade .25s ease;}
   @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
 
@@ -282,6 +283,10 @@
   .cat-del:hover{background:var(--tint-2); color:var(--q1-tx);}
   .qc-row{display:flex; align-items:center; gap:10px; margin-bottom:8px;}
   .qc-row span{font-size:13px; font-weight:600; color:var(--text);}
+  .task-input{width:100%; height:46px; border:1px solid var(--line); border-radius:12px; padding:0 14px; font-size:14px; color:var(--text); background:#fff; box-sizing:border-box;}
+  .task-input:focus{outline:none; border-color:var(--accent-2); box-shadow:0 0 0 3px hsl(var(--h) 70% 93%);}
+  .date-quick{display:flex; gap:8px; margin-top:10px;}
+  .date-quick .pill{border:none; cursor:pointer;}
   /* 카테고리 선택 시트 */
   .cat-pick{display:flex; align-items:center; gap:11px; width:100%; padding:13px 12px; border-radius:12px; border:1px solid var(--line); background:#fff; margin-bottom:8px; font-size:14px; font-weight:600; color:var(--text);}
   .cat-pick .dot{width:14px;height:14px; border-radius:50%; flex:0 0 auto; border:1.5px dashed transparent;}
@@ -496,6 +501,23 @@
   <button class="close" id="catClose">닫기</button>
 </div>
 
+<!-- 할 일 편집 시트 -->
+<div class="sheet-bg" id="taskBg"></div>
+<div class="sheet" id="taskSheet">
+  <div class="grab"></div>
+  <h3>할 일 편집</h3>
+  <div class="sub">내용</div>
+  <input type="text" id="taskText" class="task-input" placeholder="할 일 내용" />
+  <div class="sub" style="margin-top:16px">날짜</div>
+  <input type="date" id="taskDate" class="task-input" />
+  <div class="date-quick">
+    <button class="pill" data-dq="0">오늘</button>
+    <button class="pill" data-dq="1">내일</button>
+    <button class="pill" data-dq="7">다음 주</button>
+  </div>
+  <button class="close" id="taskSave">저장</button>
+</div>
+
 <script>
 "use strict";
 /* ─────────────────────────────────────────────────────────────
@@ -607,7 +629,7 @@ function updateClock(){
   const datePart = new Intl.DateTimeFormat('ko-KR',{month:'long', day:'numeric', weekday:'short'}).format(now);
   el.textContent = `${datePart} ${time}`;
 }
-function todayKey(d){ d = d||new Date(); return d.toISOString().slice(0,10); }
+function todayKey(d){ d = d||new Date(); const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
 function keyToDate(k){ const [y,m,dd]=k.split('-').map(Number); return new Date(y,m-1,dd); }
 function fmtDate(k){ const d=keyToDate(k); return (d.getMonth()+1)+'월 '+d.getDate()+'일'; }
 
@@ -798,23 +820,8 @@ document.addEventListener('click', e=>{
   $('#'+id).addEventListener('keydown', e=>{ if(e.key==='Enter'){ addTask(e.target.value); e.target.value=''; } });
 });
 
-// 카드 더블탭 = 이름 수정 (완료는 동그라미 체크로, 강조는 하트로)
-let lastTap = {id:null, t:0};
-function handleCardTap(id, target){
-  const now=Date.now();
-  if(lastTap.id===id && now-lastTap.t<320){ lastTap={id:null,t:0}; startEdit(id); return; }
-  lastTap={id, t:now};
-}
-function startEdit(id){
-  const el = document.querySelector(`[data-id="${id}"] [data-txt]`);
-  if(!el) return;
-  el.setAttribute('contenteditable','true'); el.focus();
-  const r=document.createRange(); r.selectNodeContents(el);
-  const s=getSelection(); s.removeAllRanges(); s.addRange(r);
-  const fin=()=>{ el.removeAttribute('contenteditable'); editTask(id, el.textContent); render(); };
-  el.addEventListener('blur', fin, {once:true});
-  el.addEventListener('keydown', ev=>{ if(ev.key==='Enter'){ ev.preventDefault(); el.blur(); } }, {once:true});
-}
+// 카드 탭 = 편집 시트 열기 (내용 수정 + 날짜 지정)
+function handleCardTap(id, target){ openTaskSheet(id); }
 
 /* 시간 블록 시작/종료 인라인 편집 (모바일 네이티브 시간 선택기) */
 function openTimeEditor(bi, span){
@@ -962,6 +969,44 @@ function openCatPicker(taskId){
 function closeCatPicker(){ pickTaskId=null; $('#catBg').classList.remove('on'); $('#catSheet').classList.remove('on'); }
 $('#catClose').onclick=closeCatPicker;
 $('#catBg').onclick=closeCatPicker;
+
+/* ── 할 일 편집 시트 (내용 + 날짜) ────── */
+let editTaskId=null;
+function ensureDay(key){
+  if(!DB.days[key]) DB.days[key]={ tasks:[], blocks:DEFAULT_BLOCKS.map(b=>({...b})), note:'' };
+  return DB.days[key];
+}
+function openTaskSheet(id){
+  const t=findTask(id); if(!t) return;
+  editTaskId=id;
+  $('#taskText').value=t.text;
+  $('#taskDate').value=cur;
+  $('#taskBg').classList.add('on'); $('#taskSheet').classList.add('on');
+}
+function closeTaskSheet(){ editTaskId=null; $('#taskBg').classList.remove('on'); $('#taskSheet').classList.remove('on'); }
+function shiftKey(base, n){ const d=keyToDate(base); d.setDate(d.getDate()+n); return todayKey(d); }
+$('#taskSheet').addEventListener('click', e=>{
+  const dq=e.target.closest('[data-dq]'); if(!dq) return;
+  $('#taskDate').value = shiftKey(todayKey(), +dq.dataset.dq);
+});
+$('#taskSave').onclick=()=>{
+  const t=findTask(editTaskId); if(!t){ closeTaskSheet(); return; }
+  const newText=$('#taskText').value.trim();
+  if(newText) t.text=newText;
+  const newDate=$('#taskDate').value;
+  if(newDate && newDate!==cur){
+    // 현재 날짜에서 빼서 지정한 날짜로 이동
+    const d=day(); d.tasks=d.tasks.filter(x=>x.id!==t.id);
+    const target=ensureDay(newDate);
+    const maxOrd=target.tasks.reduce((m,x)=>Math.max(m,x.ord||0),0);
+    t.ord=maxOrd+1; t.block=null;          // 새 날엔 타임라인 재배치
+    target.tasks.push(t);
+    toast(fmtDate(newDate)+'로 옮겼어요');
+  }
+  save(); render(); closeTaskSheet();
+};
+$('#taskBg').onclick=closeTaskSheet;
+$('#taskText').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#taskSave').click(); });
 
 /* ── 데이터 백업 / 불러오기 ──────────── */
 function exportData(){
@@ -1154,6 +1199,29 @@ clearSeedExamples();
 setHue(DB.hue||342);
 applyQuadColors();
 render();
+/* 못 끝낸 일 이월: 하루에 한 번, 지난 날짜의 미완료(보류 제외) 할 일을 오늘로 가져오기 제안 */
+function carryOverPrompt(){
+  const today=todayKey(); if(cur!==today) return;
+  if(DB.lastCarry===today) return;
+  DB.lastCarry=today;
+  const pending=[];
+  Object.keys(DB.days||{}).forEach(k=>{
+    if(k>=today) return;
+    (DB.days[k].tasks||[]).forEach(t=>{ if(!t.done && !t.hold) pending.push({k,t}); });
+  });
+  if(pending.length && confirm(`이전에 못 끝낸 일이 ${pending.length}개 있어요.\n오늘로 가져올까요?`)){
+    const d=day(); let ord=d.tasks.reduce((m,x)=>Math.max(m,x.ord||0),0);
+    pending.forEach(({k,t})=>{
+      DB.days[k].tasks=DB.days[k].tasks.filter(x=>x.id!==t.id);
+      t.block=null; t.ord=++ord;
+      d.tasks.push(t);
+    });
+    toast(pending.length+'개를 오늘로 가져왔어요');
+    render();
+  }
+  save();
+}
+carryOverPrompt();
 updateClock();
 setInterval(updateClock, 1000);
 window.addEventListener('resize', updateClock);
