@@ -81,6 +81,9 @@
   .datenav button{width:26px;height:26px; border-radius:8px; color:var(--soft); font-size:15px; display:grid; place-items:center;}
   .datenav button:hover{background:#fff7;}
   .datenav .d{font-size:12.5px; font-weight:700; color:var(--text); min-width:62px; text-align:center;}
+  .today-btn{height:24px; padding:0 9px; border-radius:20px; background:#fff9; color:var(--accent-3); font-size:11px; font-weight:800;}
+  .today-btn:active{transform:scale(.95);}
+  .today-btn.hide{display:none;}
   .gear{width:30px;height:30px;border-radius:9px; color:var(--soft); display:grid;place-items:center; flex:0 0 auto;}
   .gear:hover{background:#fff7;}
 
@@ -131,12 +134,17 @@
   /* 카테고리 칩 */
   .card .cat-chip{flex:0 0 auto; max-width:104px; height:24px; padding:0 9px; display:inline-flex; align-items:center; gap:5px; border:none; border-radius:30px; background:#ffffffb3; color:var(--soft); font-size:11px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;}
   .card .cat-chip:active{transform:scale(.95);}
+  .card .subcnt{flex:0 0 auto; font-size:10px; font-weight:800; color:var(--soft); background:#ffffffb3; padding:3px 7px; border-radius:20px;}
   .card .cat-chip.empty{background:transparent; color:var(--faint); border:1px dashed hsl(var(--h) 28% 80%);}
   .card .cat-chip.empty:hover{color:var(--accent-3); border-color:var(--accent-2);}
   /* 개별 to do 옮기기 버튼 */
   .card .mv{flex:0 0 auto; width:24px;height:24px; border-radius:7px; color:var(--soft); font-size:15px; display:grid; place-items:center; background:var(--tint-2);}
   .card .mv:hover{color:var(--accent-3);}
   .card .mv:active{transform:scale(.9);}
+  /* 카드 텍스트 복사 버튼 */
+  .card .cpy{flex:0 0 auto; width:24px;height:24px; border-radius:7px; color:var(--faint); font-size:13px; display:grid; place-items:center;}
+  .card .cpy:hover{background:var(--tint-2); color:var(--accent-3);}
+  .card .cpy:active{transform:scale(.9);}
   .card .txt{flex:1; min-width:0; font-size:13.5px; font-weight:600; line-height:1.3; word-break:break-word; outline:none;}
   .card.done .txt{color:var(--faint); text-decoration:line-through;}
   .card .grip{flex:0 0 auto; color:var(--faint); width:30px; height:34px; margin:-6px -4px -6px 0; display:grid; place-items:center; cursor:grab; touch-action:none; font-size:15px; letter-spacing:-2px;}
@@ -287,6 +295,41 @@
   .task-input:focus{outline:none; border-color:var(--accent-2); box-shadow:0 0 0 3px hsl(var(--h) 70% 93%);}
   .date-quick{display:flex; gap:8px; margin-top:10px;}
   .date-quick .pill{border:none; cursor:pointer;}
+  /* 전체 할 일 목록 */
+  .all-date{display:flex; align-items:baseline; gap:7px; font-size:12px; font-weight:800; color:var(--soft); margin:16px 2px 8px;}
+  .all-date:first-child{margin-top:4px;}
+  .all-date .tdy{color:var(--accent-3);}
+  .all-date .cnt{margin-left:auto; color:var(--faint);}
+  .all-row{display:flex; align-items:center; gap:10px; width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:#fff; margin-bottom:7px; font-size:13.5px; font-weight:600; color:var(--text); text-align:left;}
+  .all-row.done{color:var(--faint);}
+  .all-row.done .t{text-decoration:line-through;}
+  .all-row .t{flex:1; min-width:0; word-break:break-word;}
+  .all-row .chk{flex:0 0 auto; width:22px;height:22px; padding:0; border:2px solid hsl(var(--h) 32% 78%); border-radius:7px; background:#fff; display:grid; place-items:center; color:transparent;}
+  .all-row.done .chk{background:var(--accent-2); border-color:var(--accent-2); color:#fff;}
+  .all-row .chk svg{width:13px;height:13px; display:block;}
+  /* 편집 시트: 카테고리 색 점 */
+  .cat-dots{display:flex; flex-wrap:wrap; gap:10px;}
+  .cat-dots .cdot{width:34px;height:34px; border-radius:50%; padding:0; border:3px solid #fff; box-shadow:0 0 0 1px var(--line); cursor:pointer; position:relative;}
+  .cat-dots .cdot.none{background:#fff; color:var(--faint); font-size:15px; font-weight:700;}
+  .cat-dots .cdot.on{box-shadow:0 0 0 2px var(--accent-3); transform:scale(1.08);}
+  .cat-dots .cdot.on::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center; color:#fff; font-weight:800; text-shadow:0 1px 2px #0004;}
+  .cat-dots .cdot.none.on::after{color:var(--accent-3); text-shadow:none;}
+  /* 편집 시트: 세부 할 일 */
+  .sub-row{display:flex; align-items:center; gap:7px; margin-bottom:7px;}
+  .sub-row .schk{flex:0 0 auto; width:21px;height:21px; padding:0; border:2px solid hsl(var(--h) 32% 78%); border-radius:6px; background:#fff; display:grid; place-items:center; color:transparent;}
+  .sub-row.done .schk{background:var(--accent-2); border-color:var(--accent-2); color:#fff;}
+  .sub-row .schk svg{width:12px;height:12px; display:block;}
+  .sub-row input.stxt{flex:1; min-width:0; height:36px; border:1px solid var(--line); border-radius:9px; padding:0 10px; font-size:13px; color:var(--text); background:#fff;}
+  .sub-row.done input.stxt{color:var(--faint); text-decoration:line-through;}
+  .sub-row input.stxt:focus{outline:none; border-color:var(--accent-2);}
+  .sub-row .smv{width:28px;height:28px; flex:0 0 auto; border-radius:8px; background:var(--tint-2); color:var(--soft); font-size:10px;}
+  .sub-row .smv:disabled{opacity:.3;}
+  .sub-row .sdel{width:28px;height:28px; flex:0 0 auto; border-radius:8px; color:var(--faint); font-size:16px;}
+  .sub-row .sdel:hover{background:var(--tint-2); color:var(--q1-tx);}
+  .sub-add{display:flex; gap:8px; align-items:center; margin-top:4px;}
+  .sub-add .task-input{flex:1;}
+  .sub-dump{height:auto; min-height:46px; max-height:120px; padding:12px 14px; resize:none; line-height:1.45; font-family:inherit;}
+  .sub-add .add{width:40px;height:40px;border-radius:50%; background:var(--accent); color:#fff; font-size:20px; display:grid; place-items:center; flex:0 0 auto;}
   /* 카테고리 선택 시트 */
   .cat-pick{display:flex; align-items:center; gap:11px; width:100%; padding:13px 12px; border-radius:12px; border:1px solid var(--line); background:#fff; margin-bottom:8px; font-size:14px; font-weight:600; color:var(--text);}
   .cat-pick .dot{width:14px;height:14px; border-radius:50%; flex:0 0 auto; border:1.5px dashed transparent;}
@@ -333,7 +376,11 @@
         <button id="prevDay" aria-label="이전 날">‹</button>
         <span class="d" id="dateLabel">—</span>
         <button id="nextDay" aria-label="다음 날">›</button>
+        <button id="goToday" class="today-btn" aria-label="오늘로">오늘</button>
       </div>
+      <button class="gear" id="openAll" aria-label="전체 할 일">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      </button>
       <button class="gear" id="openSettings" aria-label="색상 설정">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm9 4c0-.5 0-1-.1-1.4l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2.4-1.4L15.7 2H8.3l-.4 2.8c-.9.3-1.7.8-2.4 1.4l-2.4-1-2 3.4 2 1.6C3 11 3 11.5 3 12s0 1 .1 1.4l-2 1.6 2 3.4 2.4-1c.7.6 1.5 1.1 2.4 1.4l.4 2.8h7.4l.4-2.8c.9-.3 1.7-.8 2.4-1.4l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.4z" opacity=".9"/></svg>
       </button>
@@ -443,8 +490,8 @@
   <div class="sub">테마 색상</div>
   <div class="swatches" id="swatches"></div>
   <div class="hue-row">
-    <label>직접 고르기</label>
-    <input type="range" id="hueRange" min="0" max="360" value="342" />
+    <label>직접 고르기 — 어떤 색이든 가능</label>
+    <input type="color" id="themeColor" class="cat-color" style="width:44px;height:36px" />
   </div>
   <div class="sub" style="margin-top:20px">강조 표시</div>
   <div class="seg" id="emphSeg">
@@ -470,6 +517,13 @@
   </div>
   <div class="opt-row" style="margin-top:14px">
     <div class="opt-txt">
+      <b>MATRIX 우선순위로 ORDER 자동 정렬</b>
+      <span>일단 이것부터 → 얼른 처리 → 시간 빼두기 → 패스 순</span>
+    </div>
+    <button class="switch" id="priToggle" role="switch" aria-label="우선순위 자동 정렬"></button>
+  </div>
+  <div class="opt-row" style="margin-top:14px">
+    <div class="opt-txt">
       <b>완료한 항목 아래로 내리기</b>
       <span>체크한 일은 목록 맨 아래로 자동 정렬돼요</span>
     </div>
@@ -491,14 +545,19 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- 카테고리 선택 시트 -->
-<div class="sheet-bg" id="catBg"></div>
-<div class="sheet" id="catSheet">
+<!-- 전체 할 일 시트 -->
+<div class="sheet-bg" id="allBg"></div>
+<div class="sheet" id="allSheet">
   <div class="grab"></div>
-  <h3>카테고리</h3>
-  <p>이 할 일의 카테고리를 골라요.</p>
-  <div id="catPickList"></div>
-  <button class="close" id="catClose">닫기</button>
+  <h3>전체 할 일</h3>
+  <p>날짜와 상관없이 모든 할 일을 한눈에 봐요. 항목을 누르면 그 날짜로 이동해 편집할 수 있어요.</p>
+  <div class="seg" id="allDoneSeg" style="margin-bottom:10px">
+    <button data-af="all">전체</button>
+    <button data-af="todo">미완료만</button>
+  </div>
+  <div class="cat-dots" id="allCatFilter" style="margin-bottom:14px"></div>
+  <div id="allList"></div>
+  <button class="close" id="allClose">닫기</button>
 </div>
 
 <!-- 할 일 편집 시트 -->
@@ -508,12 +567,22 @@
   <h3>할 일 편집</h3>
   <div class="sub">내용</div>
   <input type="text" id="taskText" class="task-input" placeholder="할 일 내용" />
+  <div class="sub" style="margin-top:16px">카테고리 <span style="font-weight:600;color:var(--faint)">(색으로 구분)</span></div>
+  <div class="cat-dots" id="taskCats"></div>
+  <div class="sub" style="margin-top:16px">세부 할 일</div>
+  <div id="subList"></div>
+  <div class="sub-add">
+    <textarea id="subAdd" class="task-input sub-dump" rows="1" placeholder="입력 후 Enter — 여러 줄 붙여넣기(덤프)도 돼요"></textarea>
+    <button class="add" id="subAddBtn">+</button>
+  </div>
   <div class="sub" style="margin-top:16px">날짜</div>
   <input type="date" id="taskDate" class="task-input" />
   <div class="date-quick">
     <button class="pill" data-dq="0">오늘</button>
     <button class="pill" data-dq="1">내일</button>
     <button class="pill" data-dq="7">다음 주</button>
+    <button class="pill" id="taskCopy" style="margin-left:auto">⧉ 텍스트 복사</button>
+    <button class="pill" id="taskDup">+ 복제</button>
   </div>
   <button class="close" id="taskSave">저장</button>
 </div>
@@ -551,6 +620,7 @@ function settings(){
   const o=DB.opts;
   if(o.hideScheduled===undefined) o.hideScheduled=true;
   if(o.sinkDone===undefined) o.sinkDone=true;
+  if(o.priSort===undefined) o.priSort=true;
   if(!o.emph) o.emph='star';
   return o;
 }
@@ -558,6 +628,17 @@ function settings(){
 function sortDisplay(arr){
   return arr.slice().sort((a,b)=>
     (settings().sinkDone ? (a.done?1:0)-(b.done?1:0) : 0) || (a.ord||0)-(b.ord||0)
+  );
+}
+// MATRIX 우선순위: 일단 이것부터 → 얼른 처리하기 → 시간 빼두기 → 미분류 → 패스
+const QUAD_RANK = { q1:0, q3:1, q2:2, q4:4 };
+function quadRank(t){ return t.q ? (QUAD_RANK[t.q] ?? 3) : 3; }
+function sortOrderList(arr){
+  const pri = settings().priSort;
+  return arr.slice().sort((a,b)=>
+    (settings().sinkDone ? (a.done?1:0)-(b.done?1:0) : 0) ||
+    (pri ? quadRank(a)-quadRank(b) : 0) ||
+    (a.ord||0)-(b.ord||0)
   );
 }
 /* ── 카테고리 ─────────────────────────── */
@@ -569,17 +650,30 @@ const DEFAULT_CATS = [
 const CAT_PALETTE = ['#f3a9c4','#f7b98a','#e9cf86','#9ed6b0','#a9c2ee','#b6a9ee','#d9a9d6','#c9c9d3'];
 function cats(){ if(!Array.isArray(DB.cats)) DB.cats=[]; return DB.cats; }
 function findCat(id){ return cats().find(c=>c.id===id); }
-function catShort(n){ n=n||''; return n.length>6 ? n.slice(0,6)+'…' : n; }
-function catChipHtml(t){
-  const c = t.cat ? findCat(t.cat) : null;
-  if(c) return `<button class="cat-chip" data-cat-pick aria-label="카테고리: ${escapeHtml(c.name)} (눌러서 변경)">${escapeHtml(catShort(c.name))}</button>`;
-  return `<button class="cat-chip empty" data-cat-pick aria-label="카테고리 지정">＋ 분류</button>`;
-}
 // 색 계산: 흰색과 t(0~1)만큼 섞기 (t 클수록 연함)
 function hexToRgb(h){ h=(h||'').replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); const n=parseInt(h||'0',16)||0; return [(n>>16)&255,(n>>8)&255,n&255]; }
 function mixWhite(hex, t){ const [r,g,b]=hexToRgb(hex); const m=v=>Math.round(v+(255-v)*t); return `rgb(${m(r)},${m(g)},${m(b)})`; }
 function mixBlack(hex, t){ const [r,g,b]=hexToRgb(hex); const m=v=>Math.round(v*(1-t)); return `rgb(${m(r)},${m(g)},${m(b)})`; }
 function luminance(hex){ const [r,g,b]=hexToRgb(hex).map(v=>v/255); return 0.2126*r+0.7152*g+0.0722*b; }
+function hueOf(hex){ const [r,g,b]=hexToRgb(hex).map(v=>v/255); const mx=Math.max(r,g,b),mn=Math.min(r,g,b); if(mx===mn) return 0; const d=mx-mn; let h; if(mx===r) h=((g-b)/d+(g<b?6:0)); else if(mx===g) h=(b-r)/d+2; else h=(r-g)/d+4; return Math.round(h*60); }
+function hslToHex(h,s,l){ s/=100; l/=100; const k=n=>(n+h/30)%12; const a=s*Math.min(l,1-l); const f=n=>{const c=l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1))); return Math.round(255*c).toString(16).padStart(2,'0');}; return '#'+f(0)+f(8)+f(4); }
+/* 테마: 아무 색이나 골라도 전체 톤 자동 파생 */
+function themeHex(){ return DB.themeColor || hslToHex(DB.hue||342, 66, 74); }
+function setTheme(hex){
+  DB.themeColor = hex; DB.hue = hueOf(hex); save();
+  const r=document.documentElement.style, W=(t)=>mixWhite(hex,t), B=(t)=>mixBlack(hex,t);
+  r.setProperty('--h', DB.hue);
+  r.setProperty('--bg', W(0.95));
+  r.setProperty('--chrome', W(0.82)); r.setProperty('--chrome-2', W(0.72));
+  r.setProperty('--tint', W(0.90)); r.setProperty('--tint-2', W(0.80));
+  r.setProperty('--accent', W(0.28)); r.setProperty('--accent-2', W(0.12));
+  r.setProperty('--accent-3', B(0.22));
+  r.setProperty('--line', W(0.82));
+  r.setProperty('--heart', hex);
+  const meta=document.querySelector('meta[name=theme-color]'); if(meta) meta.setAttribute('content', W(0.78));
+  const sw=document.getElementById('themeColor'); if(sw) sw.value=hex;
+  buildSwatches();
+}
 /* 사분면 색상 (사용자 지정) */
 const DEFAULT_QUAD = { q1:'#f3a9c4', q2:'#a9c2ee', q3:'#e9cf86', q4:'#c9c9d3' };
 const QUAD_LABELS = { q1:'일단 이것부터', q2:'시간 빼두기', q3:'얼른 처리하기', q4:'패스' };
@@ -599,7 +693,7 @@ function applyQuadColors(){
 function cardBg(t){
   const c = t.cat ? findCat(t.cat) : null;
   if(c) return t.fav ? mixWhite(c.color, 0.40) : mixWhite(c.color, 0.80);   // 강조=진하게 / 기본=연하게
-  if(t.fav) return `hsl(${DB.hue||342} 78% 88%)`;                           // 카테고리 없을 때 강조=테마 진한색
+  if(t.fav) return mixWhite(themeHex(), 0.42);                              // 카테고리 없을 때 강조=테마 진한색
   return null;                                                              // 기본 배경(CSS) 사용
 }
 function applyBg(el, t){ const bg=cardBg(t); if(bg){ el.style.background=bg; el.style.borderColor='transparent'; } }
@@ -686,8 +780,12 @@ function cardEl(t, o={}){
   html += `<button class="chk" data-check aria-label="완료 체크">${checkSVG()}</button>`;
   if(o.num)  html += `<span class="num">${o.num}</span>`;
   html += `<span class="txt" data-txt>${escapeHtml(t.text)}</span>`;
-  html += catChipHtml(t);
+  if(t.subs && t.subs.length){
+    const dn=t.subs.filter(s=>s.done).length;
+    html += `<span class="subcnt">${dn}/${t.subs.length}</span>`;
+  }
   if(o.grip) html += `<span class="grip" data-handle="1" aria-label="끌어서 정렬">⋮⋮</span>`;
+  html += `<button class="cpy" data-copy aria-label="텍스트 복사" title="복사">⧉</button>`;
   if(o.move) html += `<button class="mv" data-move aria-label="to do로 옮기기" title="to do로 옮기기">⤴</button>`;
   html += `<button class="x" data-del aria-label="삭제">×</button>`;
   el.innerHTML = html;
@@ -699,12 +797,13 @@ function escapeHtml(s){ return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 /* ── 렌더 ────────────────────────────── */
 function render(){
   $('#dateLabel').textContent = fmtDate(cur);
+  const tb=$('#goToday'); if(tb) tb.classList.toggle('hide', cur===todayKey());
   renderFlow(); renderMatrix(); renderReview();
 }
 
 function renderFlow(){
   const all = [...tasks()].sort((a,b)=>(a.ord||0)-(b.ord||0));
-  const orderItems = sortDisplay(settings().hideScheduled ? all.filter(t=> t.block==null) : all);
+  const orderItems = sortOrderList(settings().hideScheduled ? all.filter(t=> t.block==null) : all);
   const zone = $('#orderZone'); zone.innerHTML='';
   orderItems.forEach((t,i)=> zone.appendChild(cardEl(t,{grip:true, num:i+1, fill:false, fillFav:true})) );
   if(!orderItems.length) zone.innerHTML = `<div class="empty">${settings().hideScheduled?'모든 일을 타임라인에 넣었어요 ✦':'할 일을 추가해 보세요'}</div>`;
@@ -799,8 +898,8 @@ document.addEventListener('click', e=>{
   }
   const mv = e.target.closest('[data-move]');
   if(mv){ const t=findTask(mv.closest('[data-id]').dataset.id); if(t){ t.block=null; save(); render(); toast('ORDER로 옮겼어요'); } return; }
-  const cp = e.target.closest('[data-cat-pick]');
-  if(cp){ openCatPicker(cp.closest('[data-id]').dataset.id); return; }
+  const cpy = e.target.closest('[data-copy]');
+  if(cpy){ const t=findTask(cpy.closest('[data-id]').dataset.id); if(t){ copyText(t.text).then(ok=> toast(ok?'복사했어요':'복사에 실패했어요')); } return; }
   const fav = e.target.closest('[data-fav]');
   if(fav){ toggleFav(fav.closest('[data-id]').dataset.id); return; }
   const chk = e.target.closest('[data-check]');
@@ -855,32 +954,29 @@ $$('.tab').forEach(tab=> tab.addEventListener('click', ()=>{
 function shiftDay(n){ const d=keyToDate(cur); d.setDate(d.getDate()+n); cur=todayKey(d); render(); }
 $('#prevDay').onclick=()=>shiftDay(-1);
 $('#nextDay').onclick=()=>shiftDay(1);
+$('#goToday').onclick=()=>{ cur=todayKey(); render(); };
 
 /* ── 색상 설정 시트 ──────────────────── */
 const PRESETS = [
-  {n:'로즈',h:342},{n:'코랄',h:8},{n:'피치',h:24},{n:'머스타드',h:44},
-  {n:'민트',h:158},{n:'스카이',h:200},{n:'블루',h:218},{n:'라벤더',h:264},{n:'바이올렛',h:288},{n:'그레이',h:225}
+  {n:'로즈',c:'#f3a9c4'},{n:'비비드핑크',c:'#ec4d8b'},{n:'코랄',c:'#ff8a70'},{n:'머스타드',c:'#e8b931'},
+  {n:'그린',c:'#34b47f'},{n:'스카이',c:'#4aa8e0'},{n:'블루',c:'#3f6ee0'},{n:'라벤더',c:'#a98be6'},{n:'바이올렛',c:'#b44ad0'},{n:'그레이',c:'#9aa0b0'}
 ];
 function buildSwatches(){
-  const box=$('#swatches'); box.innerHTML='';
+  const box=$('#swatches'); if(!box) return; box.innerHTML='';
+  const curHex=(themeHex()||'').toLowerCase();
   PRESETS.forEach(p=>{
     const s=document.createElement('div');
-    s.className='swatch'+(p.h===DB.hue?' on':'');
-    s.style.background=`hsl(${p.h} 66% 80%)`;
-    s.title=p.n; s.onclick=()=>setHue(p.h);
+    s.className='swatch'+(p.c.toLowerCase()===curHex?' on':'');
+    s.style.background=p.c;
+    s.title=p.n; s.onclick=()=>setTheme(p.c);
     box.appendChild(s);
   });
 }
-function setHue(h){
-  DB.hue=+h; save();
-  document.documentElement.style.setProperty('--h', h);
-  document.querySelector('meta[name=theme-color]').setAttribute('content', `hsl(${h} 56% 93%)`);
-  $('#hueRange').value=h;
-  buildSwatches();
-}
+function setHue(h){ setTheme(hslToHex(+h,66,74)); }   // 하위 호환
 function syncOpts(){
   const sw=$('#hideToggle'); if(sw) sw.classList.toggle('on', !!settings().hideScheduled);
   const sk=$('#sinkToggle'); if(sk) sk.classList.toggle('on', !!settings().sinkDone);
+  const pr=$('#priToggle'); if(pr) pr.classList.toggle('on', !!settings().priSort);
   $$('#emphSeg [data-emph]').forEach(b=> b.classList.toggle('on', b.dataset.emph===settings().emph) );
 }
 function openSheet(){ $('#sheetBg').classList.add('on'); $('#sheet').classList.add('on'); buildSwatches(); syncOpts(); syncQuad(); buildCatManager(); }
@@ -888,9 +984,10 @@ function closeSheet(){ $('#sheetBg').classList.remove('on'); $('#sheet').classLi
 $('#openSettings').onclick=openSheet;
 $('#closeSheet').onclick=closeSheet;
 $('#sheetBg').onclick=closeSheet;
-$('#hueRange').addEventListener('input', e=>setHue(e.target.value));
+$('#themeColor').addEventListener('input', e=>setTheme(e.target.value));
 $('#hideToggle').onclick=()=>{ settings().hideScheduled=!settings().hideScheduled; save(); syncOpts(); render(); };
 $('#sinkToggle').onclick=()=>{ settings().sinkDone=!settings().sinkDone; save(); syncOpts(); render(); };
+$('#priToggle').onclick=()=>{ settings().priSort=!settings().priSort; save(); syncOpts(); render(); };
 $('#emphSeg').addEventListener('click', e=>{
   const b=e.target.closest('[data-emph]'); if(!b) return;
   settings().emph=b.dataset.emph; save(); syncOpts(); render();
@@ -949,26 +1046,6 @@ $('#catMgr').addEventListener('click', e=>{
 });
 $('#catAdd').onclick=addCat;
 
-/* ── 카테고리 선택 시트 ──────────────── */
-let pickTaskId=null;
-function openCatPicker(taskId){
-  pickTaskId=taskId; const t=findTask(taskId);
-  const box=$('#catPickList'); box.innerHTML='';
-  const mk=(id, name, colorHtml, isNone)=>{
-    const on = isNone ? !t.cat : (t.cat===id);
-    const el=document.createElement('button');
-    el.className='cat-pick'+(isNone?' none':'')+(on?' on':'');
-    el.innerHTML = `<span class="dot" ${isNone?'':`style="background:${colorHtml}"`}></span><span>${escapeHtml(name)}</span>${on?'<span class="mark">✓</span>':''}`;
-    el.onclick=()=>{ t.cat = isNone ? null : id; save(); render(); closeCatPicker(); };
-    box.appendChild(el);
-  };
-  cats().forEach(c=> mk(c.id, c.name, c.color, false) );
-  mk(null,'없음', null, true);
-  $('#catBg').classList.add('on'); $('#catSheet').classList.add('on');
-}
-function closeCatPicker(){ pickTaskId=null; $('#catBg').classList.remove('on'); $('#catSheet').classList.remove('on'); }
-$('#catClose').onclick=closeCatPicker;
-$('#catBg').onclick=closeCatPicker;
 
 /* ── 할 일 편집 시트 (내용 + 날짜) ────── */
 let editTaskId=null;
@@ -979,10 +1056,93 @@ function ensureDay(key){
 function openTaskSheet(id){
   const t=findTask(id); if(!t) return;
   editTaskId=id;
+  if(!Array.isArray(t.subs)) t.subs=[];
   $('#taskText').value=t.text;
   $('#taskDate').value=cur;
+  buildTaskCats(t); buildSubList(t);
   $('#taskBg').classList.add('on'); $('#taskSheet').classList.add('on');
 }
+/* 카테고리: 색 점으로 선택 */
+function buildTaskCats(t){
+  const box=$('#taskCats'); box.innerHTML='';
+  cats().forEach(c=>{
+    const b=document.createElement('button');
+    b.className='cdot'+(t.cat===c.id?' on':'');
+    b.style.background=c.color; b.title=c.name;
+    b.onclick=()=>{ t.cat = (t.cat===c.id? null : c.id); save(); buildTaskCats(t); render(); };
+    box.appendChild(b);
+  });
+  const none=document.createElement('button');
+  none.className='cdot none'+(!t.cat?' on':''); none.textContent='∅'; none.title='없음';
+  none.onclick=()=>{ t.cat=null; save(); buildTaskCats(t); render(); };
+  box.appendChild(none);
+  if(!cats().length){
+    const hint=document.createElement('span');
+    hint.style.cssText='font-size:12px;color:var(--faint);align-self:center;';
+    hint.textContent='⚙︎ 설정에서 카테고리를 만들어 보세요';
+    box.appendChild(hint);
+  }
+}
+/* 세부 할 일: 덤프 입력 + 수정/완료/삭제/순서 변경 */
+function buildSubList(t){
+  const box=$('#subList'); box.innerHTML='';
+  (t.subs||[]).forEach((s,i)=>{
+    const row=document.createElement('div');
+    row.className='sub-row'+(s.done?' done':'');
+    row.innerHTML=
+      `<button class="schk" aria-label="완료">${checkSVG()}</button>`+
+      `<input class="stxt" value="${escapeHtml(s.text)}" />`+
+      `<button class="smv up" ${i===0?'disabled':''} aria-label="위로">▲</button>`+
+      `<button class="smv dn" ${i===t.subs.length-1?'disabled':''} aria-label="아래로">▼</button>`+
+      `<button class="sdel" aria-label="삭제">×</button>`;
+    row.querySelector('.schk').onclick=()=>{ s.done=!s.done; save(); buildSubList(t); render(); };
+    row.querySelector('.stxt').addEventListener('input', e=>{ s.text=e.target.value; save(); render(); });
+    row.querySelector('.up').onclick=()=>{ if(i<=0) return; [t.subs[i-1],t.subs[i]]=[t.subs[i],t.subs[i-1]]; save(); buildSubList(t); };
+    row.querySelector('.dn').onclick=()=>{ if(i>=t.subs.length-1) return; [t.subs[i+1],t.subs[i]]=[t.subs[i],t.subs[i+1]]; save(); buildSubList(t); };
+    row.querySelector('.sdel').onclick=()=>{ t.subs.splice(i,1); save(); buildSubList(t); render(); };
+    box.appendChild(row);
+  });
+  if(!(t.subs||[]).length) box.innerHTML='<div class="empty" style="padding:8px">아직 세부 할 일이 없어요</div>';
+}
+function addSubs(t, raw){
+  const lines=(raw||'').split(/\n/).map(s=>s.trim()).filter(Boolean);   // 여러 줄 덤프 지원
+  lines.forEach(txt=> t.subs.push({id:uid(), text:txt, done:false}) );
+  if(lines.length){ save(); buildSubList(t); render(); }
+}
+$('#subAddBtn').onclick=()=>{ const t=findTask(editTaskId); if(!t) return; addSubs(t, $('#subAdd').value); $('#subAdd').value=''; $('#subAdd').focus(); };
+$('#subAdd').addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); $('#subAddBtn').click(); } });
+/* 텍스트 복사(클립보드) — 다른 앱에 붙여넣기용 */
+function taskToText(t){
+  let out = t.text;
+  (t.subs||[]).forEach(s=>{ out += `\n${s.done?'☑':'☐'} ${s.text}`; });
+  return out;
+}
+async function copyText(str){
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(str); return true; }
+  }catch(_){}
+  try{                                     // 폴백(구형/비보안 컨텍스트)
+    const ta=document.createElement('textarea');
+    ta.value=str; ta.style.cssText='position:fixed;opacity:0;';
+    document.body.appendChild(ta); ta.select();
+    const ok=document.execCommand('copy'); ta.remove(); return ok;
+  }catch(_){ return false; }
+}
+$('#taskCopy').onclick=async ()=>{
+  const t=findTask(editTaskId); if(!t) return;
+  const ok=await copyText(taskToText(t));
+  toast(ok?'클립보드에 복사했어요':'복사에 실패했어요');
+};
+/* 복제 — 같은 날짜에 항목 하나 더 */
+$('#taskDup').onclick=()=>{
+  const t=findTask(editTaskId); if(!t) return;
+  const d=day(); const maxOrd=d.tasks.reduce((m,x)=>Math.max(m,x.ord||0),0);
+  const copy=JSON.parse(JSON.stringify(t));
+  copy.id=uid(); copy.ord=maxOrd+1; copy.done=false; copy.block=null;
+  (copy.subs||[]).forEach(s=>{ s.id=uid(); s.done=false; });
+  d.tasks.push(copy);
+  save(); render(); toast('복제했어요'); closeTaskSheet();
+};
 function closeTaskSheet(){ editTaskId=null; $('#taskBg').classList.remove('on'); $('#taskSheet').classList.remove('on'); }
 function shiftKey(base, n){ const d=keyToDate(base); d.setDate(d.getDate()+n); return todayKey(d); }
 $('#taskSheet').addEventListener('click', e=>{
@@ -1007,6 +1167,64 @@ $('#taskSave').onclick=()=>{
 };
 $('#taskBg').onclick=closeTaskSheet;
 $('#taskText').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#taskSave').click(); });
+
+/* ── 전체 할 일 시트 ─────────────────── */
+let allF={ done:'all', cat:'all' };
+function buildAllFilters(){
+  $$('#allDoneSeg [data-af]').forEach(b=> b.classList.toggle('on', b.dataset.af===allF.done) );
+  const box=$('#allCatFilter'); box.innerHTML='';
+  const mk=(id,color,title,isAll)=>{
+    const b=document.createElement('button');
+    b.className='cdot'+(isAll?' none':'')+(allF.cat===id?' on':'');
+    if(color) b.style.background=color;
+    if(isAll) b.textContent='All';
+    b.title=title;
+    b.style.fontSize='10px';
+    b.onclick=()=>{ allF.cat=id; buildAllFilters(); buildAllList(); };
+    box.appendChild(b);
+  };
+  mk('all', null, '전체 카테고리', true);
+  cats().forEach(c=> mk(c.id, c.color, c.name, false) );
+}
+function passFilter(t){
+  if(allF.done==='todo' && t.done) return false;
+  if(allF.cat!=='all' && t.cat!==allF.cat) return false;
+  return true;
+}
+function buildAllList(){
+  const box=$('#allList'); box.innerHTML='';
+  const today=todayKey();
+  const keys=Object.keys(DB.days||{}).filter(k=>(DB.days[k].tasks||[]).some(passFilter)).sort();
+  if(!keys.length){ box.innerHTML='<div class="empty">표시할 할 일이 없어요</div>'; return; }
+  keys.forEach(k=>{
+    const list=sortDisplay(DB.days[k].tasks.filter(passFilter));
+    const head=document.createElement('div'); head.className='all-date';
+    const dt=keyToDate(k); const wd=['일','월','화','수','목','금','토'][dt.getDay()];
+    head.innerHTML=`<span>${fmtDate(k)} (${wd})</span>${k===today?'<span class="tdy">오늘</span>':''}<span class="cnt">${list.length}</span>`;
+    box.appendChild(head);
+    list.forEach(t=>{
+      const row=document.createElement('button');
+      row.className='all-row'+(t.done?' done':'');
+      row.innerHTML=`<span class="chk" data-all-chk>${checkSVG()}</span><span class="t">${escapeHtml(t.text)}</span>`;
+      row.addEventListener('click', e=>{
+        if(e.target.closest('[data-all-chk]')){       // 체크 = 그 자리에서 완료 토글
+          t.done=!t.done; save(); buildAllList(); render(); return;
+        }
+        cur=k; render(); closeAllSheet(); openTaskSheet(t.id);   // 행 = 그 날짜로 이동 + 편집
+      });
+      box.appendChild(row);
+    });
+  });
+}
+function openAllSheet(){ buildAllFilters(); buildAllList(); $('#allBg').classList.add('on'); $('#allSheet').classList.add('on'); }
+function closeAllSheet(){ $('#allBg').classList.remove('on'); $('#allSheet').classList.remove('on'); }
+$('#openAll').onclick=openAllSheet;
+$('#allClose').onclick=closeAllSheet;
+$('#allBg').onclick=closeAllSheet;
+$('#allDoneSeg').addEventListener('click', e=>{
+  const b=e.target.closest('[data-af]'); if(!b) return;
+  allF.done=b.dataset.af; buildAllFilters(); buildAllList();
+});
 
 /* ── 데이터 백업 / 불러오기 ──────────── */
 function exportData(){
@@ -1033,7 +1251,7 @@ function importData(file){
     if(!DB.opts) DB.opts = { hideScheduled:true };
     if(DB.cats===undefined) DB.cats = [];
     cur = todayKey();
-    save(); setHue(DB.hue); buildSwatches(); syncOpts(); render();
+    save(); setTheme(DB.themeColor||hslToHex(DB.hue||342,66,74)); syncOpts(); render();
     toast('백업을 불러왔어요'); closeSheet();
   };
   reader.onerror = ()=> toast('파일을 읽지 못했어요');
@@ -1063,7 +1281,7 @@ const MOVE=6;
 document.addEventListener('pointerdown', e=>{
   if(e.button && e.button!==0) return;
   if(e.target.closest('[contenteditable="true"]')) return;
-  if(e.target.closest('[data-fav],[data-del],[data-check],[data-move],[data-cat-pick]')) return; // 버튼 제외
+  if(e.target.closest('[data-fav],[data-del],[data-check],[data-move],[data-copy]')) return; // 버튼 제외
   const handle = e.target.closest('[data-handle]');
   const card   = e.target.closest('[data-card]');
   if(!card) return;
@@ -1196,7 +1414,7 @@ function clearSeedExamples(){
   save();
 }
 clearSeedExamples();
-setHue(DB.hue||342);
+setTheme(themeHex());
 applyQuadColors();
 render();
 /* 못 끝낸 일 이월: 하루에 한 번, 지난 날짜의 미완료(보류 제외) 할 일을 오늘로 가져오기 제안 */
