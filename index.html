@@ -1351,6 +1351,10 @@ function renderCalendar(syncToCur){
   $('#calTitle').textContent=`${Y}년 ${M}월`;
   const first=new Date(Y,M-1,1), startDow=first.getDay();
   const daysInMonth=new Date(Y,M,0).getDate();
+  // 이 달의 모든 날짜에 반복 미리 생성 (셀을 누르지 않아도 보이게)
+  for(let dd=1;dd<=daysInMonth;dd++){
+    materializeRepeats(`${Y}-${String(M).padStart(2,'0')}-${String(dd).padStart(2,'0')}`);
+  }
   const today=todayKey();
   grid.innerHTML='';
   for(let i=0;i<startDow;i++){ const b=document.createElement('div'); b.className='cal-cell blank'; grid.appendChild(b); }
