@@ -133,6 +133,12 @@
   .card .cat-chip{flex:0 0 auto; max-width:104px; height:24px; padding:0 9px; display:inline-flex; align-items:center; gap:5px; border:none; border-radius:30px; background:#ffffffb3; color:var(--soft); font-size:11px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;}
   .card .cat-chip:active{transform:scale(.95);}
   .card .subcnt{flex:0 0 auto; font-size:10px; font-weight:800; color:var(--soft); background:#ffffffb3; padding:3px 7px; border-radius:20px;}
+  /* 카테고리 그룹 헤더 (이미지 스타일: 색 점 + 이름) */
+  .cat-head{display:flex; align-items:center; gap:8px; margin:14px 4px 8px;}
+  .cat-head:first-child{margin-top:2px;}
+  .cat-head i{width:11px;height:11px; border-radius:50%; flex:0 0 auto;}
+  .cat-head b{font-size:14px; font-weight:800; color:var(--text); letter-spacing:-.01em;}
+  .cat-head span{margin-left:auto; font-size:12px; font-weight:800; color:var(--faint);}
   /* 어두운 배경 카드 자동 가독성 */
   .card.darkbg, .card.darkbg .txt{color:#fff;}
   .card.darkbg.done .txt{color:#ffffff99;}
@@ -856,10 +862,15 @@ function dedupeOccurrences(){                  // 같은 날 같은 반복의 �
 }
 
 /* ── 작업 조작 ───────────────────────── */
+function autoCat(text){
+  const lower=(text||'').toLowerCase();
+  const hit=cats().find(c=> c.name && c.name.trim() && lower.includes(c.name.trim().toLowerCase()));
+  return hit ? hit.id : null;
+}
 function addTask(text, where){
   text = (text||'').trim(); if(!text) return;
   const maxOrd = tasks().reduce((m,t)=>Math.max(m,t.ord||0),0);
-  tasks().push({ id:uid(), text, done:false, fav:false, q:null, block:null, ord:maxOrd+1 });
+  tasks().push({ id:uid(), text, done:false, fav:false, q:null, block:null, cat:autoCat(text), hold:false, ord:maxOrd+1, subs:[] });
   save(); render();
 }
 function removeTask(id){                       // 이 항목만 (모든 날짜·보관함에서)
@@ -990,8 +1001,20 @@ function renderMatrix(){
   const all = tasks();
   const inbox = sortDisplay(all.filter(t=>!t.q));
   const z = $('#inboxZone'); z.innerHTML='';
-  inbox.forEach(t=> z.appendChild(cardEl(t,{fillFav:true, grip:true})) );
-  if(!inbox.length) z.innerHTML = `<div class="empty">모두 분류했어요 ✦</div>`;
+  if(!inbox.length){ z.innerHTML = `<div class="empty">모두 분류했어요 ✦</div>`; }
+  else {
+    // 카테고리별 자동 그룹 (카드 자체는 색으로만 구분)
+    const groups=[];
+    cats().forEach(c=>{ const items=inbox.filter(t=>t.cat===c.id); if(items.length) groups.push({c, items}); });
+    const none=inbox.filter(t=> !t.cat || !findCat(t.cat));
+    if(none.length) groups.push({c:null, items:none});
+    groups.forEach(g=>{
+      const h=document.createElement('div'); h.className='cat-head';
+      h.innerHTML=`<i style="background:${g.c?g.c.color:'#c9c9d3'}"></i><b>${g.c?escapeHtml(g.c.name):'미분류'}</b><span>${g.items.length}</span>`;
+      z.appendChild(h);
+      g.items.forEach(t=> z.appendChild(cardEl(t,{fillFav:true, grip:true})) );
+    });
+  }
   $('#inboxCount').textContent = inbox.length;
 
   QUADS.forEach(q=>{
