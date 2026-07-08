@@ -339,6 +339,12 @@
   .all-row .chk{flex:0 0 auto; width:22px;height:22px; padding:0; border:2px solid hsl(var(--h) 32% 78%); border-radius:7px; background:#fff; display:grid; place-items:center; color:transparent;}
   .all-row.done .chk{background:var(--accent-2); border-color:var(--accent-2); color:#fff;}
   .all-row .chk svg{width:13px;height:13px; display:block;}
+  #allList .all-row{flex-wrap:wrap;}
+  #allList .all-row .t{flex:1 1 100%; margin-bottom:2px;}
+  #allList .all-row .pill{border:none;}
+  .arc-daterow{display:flex; gap:8px; align-items:center; margin:-2px 0 10px; padding:0 4px;}
+  .arc-daterow input[type=date]{flex:1; height:40px; border:1px solid var(--line); border-radius:10px; padding:0 10px; font-size:13px; font-family:inherit; background:#fff; color:var(--text);}
+  .arc-daterow .pill{border:none; background:var(--accent); color:#fff;}
   /* 편집 시트: 카테고리 색 점 */
   .cat-dots{display:flex; flex-wrap:wrap; gap:10px;}
   .cat-dots .cdot{width:34px;height:34px; border-radius:50%; padding:0; border:3px solid #fff; box-shadow:0 0 0 1px var(--line); cursor:pointer; position:relative;}
@@ -1264,11 +1270,18 @@ function repMaster(t){
   if(t.masterId){ const m=findTaskAnywhere(t.masterId); if(m && m.rep) return m; }
   return null;
 }
-/* 규칙 변경 시: 미래의 미완료 발생분 정리 → 새 규칙으로 재생성 (중복 방지 핵심) */
+/* 규칙 변경 시: 새 규칙에 안 맞는 미래·미완료 발생분만 제거 (맞는 건 그대로 유지) */
 function purgeFutureOccurrences(masterId){
+  const master=findTaskAnywhere(masterId);
+  const mDay=findDayOf(masterId);
   const today=todayKey();
   Object.keys(DB.days||{}).forEach(k=>{
-    if(k>=today) DB.days[k].tasks=(DB.days[k].tasks||[]).filter(x=> !(x.masterId===masterId && !x.done));
+    if(k<today) return;
+    DB.days[k].tasks=(DB.days[k].tasks||[]).filter(x=>{
+      if(x.masterId!==masterId || x.done) return true;
+      if(!master || !master.rep || !mDay) return false;   // 규칙이 사라짐 → 제거
+      return repMatches(mDay, master.rep, k);             // 새 규칙에 맞으면 유지
+    });
   });
 }
 function afterRepChange(master){
@@ -1290,7 +1303,12 @@ function buildRepUI(t){
     note.textContent='↻ 반복 시리즈 항목이에요. 아래 설정은 원본 규칙에 적용돼요.';
     box.appendChild(note);
   }
-  const tweak=fn=>{ fn(); purgeFutureOccurrences(eff.id); save(); render(); };   // 입력형(포커스 유지)
+  const guard=()=>{                                       // 편집 중이던 항목이 정리로 사라졌으면 시트 닫기
+    const s=findTask(editTaskId);
+    if(!s){ toast('반복 규칙을 변경했어요'); closeTaskSheet(); return null; }
+    return s;
+  };
+  const tweak=fn=>{ fn(); purgeFutureOccurrences(eff.id); save(); render(); guard(); };   // 입력형(포커스 유지)
   if(type==='daily'){
     const s=document.createElement('span'); s.style.cssText='display:inline-flex;align-items:center;gap:6px';
     s.innerHTML=`<label>간격</label><input type="number" min="1" max="99" value="${eff.rep.interval||1}" id="repInt"><label>일마다</label>`;
@@ -1302,7 +1320,9 @@ function buildRepUI(t){
       b.className='wd'+((eff.rep.days||[]).includes(i)?' on':''); b.textContent=w;
       b.onclick=()=>{ const ds=eff.rep.days||(eff.rep.days=[]); const at=ds.indexOf(i);
         if(at>=0){ if(ds.length>1) ds.splice(at,1); } else ds.push(i);
-        purgeFutureOccurrences(eff.id); save(); render(); buildRepUI(t); };
+        purgeFutureOccurrences(eff.id); save(); render();
+        const s=findTask(editTaskId); if(!s){ toast('반복 규칙을 변경했어요'); closeTaskSheet(); return; }
+        buildRepUI(s); };
       box.appendChild(b);
     });
     const wrap=document.createElement('span'); wrap.style.cssText='display:inline-flex;align-items:center;gap:6px;margin-left:4px';
@@ -1324,7 +1344,9 @@ function buildRepUI(t){
       `<input type="date" id="repUntil" value="${eff.rep.until||''}" style="flex:1;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 8px;font-size:13px;font-family:inherit;">`+
       `<button class="pill" id="repUntilClear" type="button">무기한</button>`;
     end.querySelector('#repUntil').addEventListener('input',e=> tweak(()=>{ eff.rep.until=e.target.value||null; }) );
-    end.querySelector('#repUntilClear').onclick=()=>{ eff.rep.until=null; purgeFutureOccurrences(eff.id); save(); render(); buildRepUI(t); };
+    end.querySelector('#repUntilClear').onclick=()=>{ eff.rep.until=null; purgeFutureOccurrences(eff.id); save(); render();
+      const s=findTask(editTaskId); if(!s){ toast('반복 규칙을 변경했어요'); closeTaskSheet(); return; }
+      buildRepUI(s); };
     box.appendChild(end);
   }
 }
@@ -1362,19 +1384,35 @@ function repMatches(masterKey, rep, dateKey){
 }
 function materializeRepeats(dateKey){
   let made=false;
+  // 원본 색인: masterId → { rep, 기준일 }
+  const masters={};
   Object.keys(DB.days||{}).forEach(k=>{
-    if(k>=dateKey) return;
-    (DB.days[k].tasks||[]).forEach(m=>{
-      if(!m.rep) return;
-      if(!repMatches(k, m.rep, dateKey)) return;
-      const target=ensureDay(dateKey);
-      if(target.tasks.some(x=> x.masterId===m.id || x.id===m.id)) return;
-      const maxOrd=target.tasks.reduce((a,x)=>Math.max(a,x.ord||0),0);
-      const c=JSON.parse(JSON.stringify(m));
-      c.id=uid(); c.masterId=m.id; c.rep=null; c.done=false; c.hold=false; c.block=null; c.ord=maxOrd+1;
-      (c.subs||[]).forEach(s=>{ s.id=uid(); s.done=false; });
-      target.tasks.push(c); made=true;
+    (DB.days[k].tasks||[]).forEach(t=>{ if(t.rep) masters[t.id]={rep:t.rep, day:k, task:t}; });
+  });
+  // 1) 자가 치유: 이 날짜의 미래·미완료 발생분 중 현재 규칙과 안 맞는 것 제거
+  //    (간격/요일/종료일을 바꾸기 전에 생성된 낡은 항목 정리)
+  const dayObj=DB.days[dateKey];
+  if(dayObj && dateKey>=todayKey()){
+    const before=(dayObj.tasks||[]).length;
+    dayObj.tasks=(dayObj.tasks||[]).filter(x=>{
+      if(!x.masterId || x.done) return true;         // 일반 항목·완료 기록은 보존
+      const m=masters[x.masterId];
+      if(!m) return true;                            // 원본이 없으면(과거 데이터) 보존
+      return repMatches(m.day, m.rep, dateKey);      // 현재 규칙에 맞는 것만 유지
     });
+    if((dayObj.tasks||[]).length!==before) made=true;
+  }
+  // 2) 생성: 규칙에 맞는데 아직 없는 발생분 추가
+  Object.entries(masters).forEach(([mid, m])=>{
+    if(m.day>=dateKey) return;
+    if(!repMatches(m.day, m.rep, dateKey)) return;
+    const target=ensureDay(dateKey);
+    if(target.tasks.some(x=> x.masterId===mid || x.id===mid)) return;
+    const maxOrd=target.tasks.reduce((a,x)=>Math.max(a,x.ord||0),0);
+    const c=JSON.parse(JSON.stringify(m.task));
+    c.id=uid(); c.masterId=mid; c.rep=null; c.done=false; c.hold=false; c.block=null; c.ord=maxOrd+1;
+    (c.subs||[]).forEach(s=>{ s.id=uid(); s.done=false; });
+    target.tasks.push(c); made=true;
   });
   if(made) save();
 }
@@ -1547,6 +1585,15 @@ $('#calPrev').onclick=()=>shiftMonth(-1);
 $('#calNext').onclick=()=>shiftMonth(1);
 
 /* ── 보관함 시트 ─────────────────────── */
+function unarchiveTo(t, k){                    // 보관함 → 지정 날짜로
+  DB.archive=archive().filter(x=>x.id!==t.id);
+  t.hold=false; t.block=null;
+  const d=ensureDay(k);
+  const maxOrd=d.tasks.reduce((m,x)=>Math.max(m,x.ord||0),0);
+  t.ord=maxOrd+1; d.tasks.push(t);
+  save(); buildArchiveList(); render();
+  toast(fmtDate(k)+'로 보냈어요');
+}
 function buildArchiveList(){
   const box=$('#allList'); box.innerHTML='';
   const list=archive();
@@ -1556,9 +1603,22 @@ function buildArchiveList(){
     row.className='all-row';
     row.innerHTML=
       `<span class="t">${escapeHtml(t.text)}</span>`+
-      `<button class="pill" data-arc-today>오늘로</button>`+
+      `<button class="pill" data-arc-today>오늘</button>`+
+      `<button class="pill" data-arc-tmr>내일</button>`+
+      `<button class="pill" data-arc-pick>날짜…</button>`+
       `<button class="x" data-arc-del aria-label="삭제" style="opacity:.7">×</button>`;
-    row.querySelector('[data-arc-today]').onclick=()=>{ unarchiveTask(t); save(); buildArchiveList(); render(); toast('오늘로 꺼냈어요'); };
+    row.querySelector('[data-arc-today]').onclick=()=> unarchiveTo(t, todayKey());
+    row.querySelector('[data-arc-tmr]').onclick=()=> unarchiveTo(t, shiftKey(todayKey(),1));
+    row.querySelector('[data-arc-pick]').onclick=()=>{
+      const next=row.nextElementSibling;
+      if(next && next.classList.contains('arc-daterow')){ next.remove(); return; }   // 토글
+      $$('.arc-daterow').forEach(r=>r.remove());
+      const dr=document.createElement('div');
+      dr.className='arc-daterow';
+      dr.innerHTML=`<input type="date" value="${todayKey()}"><button class="pill">이 날짜로 이동</button>`;
+      dr.querySelector('button').onclick=()=>{ const v=dr.querySelector('input').value; if(v) unarchiveTo(t, v); };
+      row.after(dr);
+    };
     row.querySelector('[data-arc-del]').onclick=()=>{ if(confirm(`'${t.text}'\n삭제할까요?`)){ DB.archive=archive().filter(x=>x.id!==t.id); save(); buildArchiveList(); render(); } };
     box.appendChild(row);
   });
