@@ -345,6 +345,10 @@
   .arc-daterow{display:flex; gap:8px; align-items:center; margin:-2px 0 10px; padding:0 4px;}
   .arc-daterow input[type=date]{flex:1; height:40px; border:1px solid var(--line); border-radius:10px; padding:0 10px; font-size:13px; font-family:inherit; background:#fff; color:var(--text);}
   .arc-daterow .pill{border:none; background:var(--accent); color:#fff;}
+  .tpl-row{display:flex; align-items:center; gap:8px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:#fff; margin-bottom:7px;}
+  .tpl-row .t{flex:1; min-width:0; font-size:13.5px; font-weight:700; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .tpl-row .t em{font-style:normal; font-size:11px; font-weight:800; color:var(--faint); margin-left:4px;}
+  .tpl-row .pill.apply{border:none; background:var(--accent); color:#fff;}
   /* 편집 시트: 카테고리 색 점 */
   .cat-dots{display:flex; flex-wrap:wrap; gap:10px;}
   .cat-dots .cdot{width:34px;height:34px; border-radius:50%; padding:0; border:3px solid #fff; box-shadow:0 0 0 1px var(--line); cursor:pointer; position:relative;}
@@ -590,6 +594,10 @@
   <p style="margin-top:-6px">이름과 색을 정하고 위/아래로 정렬할 수 있어요.</p>
   <div id="catMgr"></div>
   <button class="data-btn" id="catAdd" style="margin-top:8px; width:100%">+ 카테고리 추가</button>
+  <div class="sub" style="margin-top:20px">하루 템플릿</div>
+  <p style="margin-top:-6px">자주 쓰는 하루 구성을 저장해두고, 원하는 날짜를 열어 한 번에 적용해요. (시간 블록·분면·카테고리·세부 할 일 포함)</p>
+  <div id="tplList"></div>
+  <button class="data-btn" id="tplSave" style="width:100%; margin-top:6px">+ 지금 보는 날짜를 템플릿으로 저장</button>
   <div class="sub" style="margin-top:20px">데이터 정리</div>
   <div class="data-row">
     <button class="data-btn" id="wipeDone">✓ 완료한 할 일 모두 삭제</button>
@@ -1161,7 +1169,7 @@ function syncOpts(){
   const pr=$('#priToggle'); if(pr) pr.classList.toggle('on', !!settings().priSort);
   $$('#emphSeg [data-emph]').forEach(b=> b.classList.toggle('on', b.dataset.emph===settings().emph) );
 }
-function openSheet(){ $('#sheetBg').classList.add('on'); $('#sheet').classList.add('on'); buildSwatches(); syncOpts(); syncQuad(); buildCatManager(); }
+function openSheet(){ $('#sheetBg').classList.add('on'); $('#sheet').classList.add('on'); buildSwatches(); syncOpts(); syncQuad(); buildCatManager(); buildTplList(); }
 function closeSheet(){ $('#sheetBg').classList.remove('on'); $('#sheet').classList.remove('on'); }
 $('#openSettings').onclick=openSheet;
 $('#closeSheet').onclick=closeSheet;
@@ -1183,6 +1191,54 @@ $('#quadColors').addEventListener('input', e=>{
   DB.opts.quadColors[inp.dataset.quad]=inp.value; save(); applyQuadColors();
 });
 $('#quadReset').onclick=()=>{ if(DB.opts) DB.opts.quadColors={}; save(); applyQuadColors(); syncQuad(); };
+
+/* ── 하루 템플릿 ─────────────────────── */
+function templates(){ if(!Array.isArray(DB.templates)) DB.templates=[]; return DB.templates; }
+function buildTplList(){
+  const box=$('#tplList'); if(!box) return; box.innerHTML='';
+  const list=templates();
+  if(!list.length){ box.innerHTML='<div class="empty" style="padding:6px">저장된 템플릿이 없어요</div>'; return; }
+  list.forEach(tp=>{
+    const row=document.createElement('div'); row.className='tpl-row';
+    row.innerHTML=
+      `<span class="t">${escapeHtml(tp.name)} <em>${tp.items.length}개</em></span>`+
+      `<button class="pill apply" data-tpl-apply>적용</button>`+
+      `<button class="x" data-tpl-del aria-label="삭제" style="opacity:.7">×</button>`;
+    row.querySelector('[data-tpl-apply]').onclick=()=> applyTemplate(tp);
+    row.querySelector('[data-tpl-del]').onclick=()=>{ if(confirm(`'${tp.name}' 템플릿을 삭제할까요?`)){ DB.templates=templates().filter(x=>x.id!==tp.id); save(); buildTplList(); } };
+    box.appendChild(row);
+  });
+}
+function saveTemplateFromCur(){
+  // 반복 원본/생성본은 제외 (반복 시스템이 스스로 채우므로 중복 방지)
+  const items=tasks().filter(t=>!t.rep && !t.masterId).map(t=>({
+    text:t.text, cat:t.cat||null, fav:!!t.fav, q:t.q||null,
+    block:(typeof t.block==='number')?t.block:null,
+    subs:(t.subs||[]).map(s=>s.text)
+  }));
+  if(!items.length){ toast('저장할 할 일이 없어요 (반복 항목은 제외돼요)'); return; }
+  const name=prompt('템플릿 이름을 지어주세요', '나의 하루');
+  if(name==null) return;
+  templates().push({id:uid(), name:(name.trim()||'템플릿'), items});
+  save(); buildTplList(); toast(`'${(name.trim()||'템플릿')}' 저장 (${items.length}개)`);
+}
+function applyTemplate(tp){
+  const d=day();
+  let ord=d.tasks.reduce((m,x)=>Math.max(m,x.ord||0),0);
+  tp.items.forEach(it=>{
+    d.tasks.push({
+      id:uid(), text:it.text, done:false, fav:!!it.fav,
+      q:it.q||null,
+      block:(typeof it.block==='number' && it.block < (d.blocks||[]).length) ? it.block : null,
+      cat:(it.cat && findCat(it.cat)) ? it.cat : null,
+      hold:false, ord:++ord,
+      subs:(it.subs||[]).map(x=>({id:uid(), text:x, done:false}))
+    });
+  });
+  save(); render(); closeSheet();
+  toast(`'${tp.name}' 적용 — ${fmtDate(cur)}에 ${tp.items.length}개 추가`);
+}
+$('#tplSave').onclick=saveTemplateFromCur;
 
 /* ── 데이터 정리 (일괄 삭제) ─────────── */
 $('#wipeDone').onclick=()=>{
@@ -1410,7 +1466,9 @@ function materializeRepeats(dateKey){
     if(target.tasks.some(x=> x.masterId===mid || x.id===mid)) return;
     const maxOrd=target.tasks.reduce((a,x)=>Math.max(a,x.ord||0),0);
     const c=JSON.parse(JSON.stringify(m.task));
-    c.id=uid(); c.masterId=mid; c.rep=null; c.done=false; c.hold=false; c.block=null; c.ord=maxOrd+1;
+    c.id=uid(); c.masterId=mid; c.rep=null; c.done=false; c.hold=false; c.ord=maxOrd+1;
+    // FLOW 위치 고정: 원본의 시간 블록을 그대로 물려받기
+    c.block = (typeof m.task.block==='number' && m.task.block < (target.blocks||[]).length) ? m.task.block : null;
     (c.subs||[]).forEach(s=>{ s.id=uid(); s.done=false; });
     target.tasks.push(c); made=true;
   });
