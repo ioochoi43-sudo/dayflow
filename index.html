@@ -1842,6 +1842,12 @@ function drop(x,y){
       } else if(z.startsWith('block-')){
         t.block=+z.split('-')[1]; reorderInto(zone, t);
         if(t.rep) propagateBlock(t);
+        else if(t.masterId){
+          const m=findTaskAnywhere(t.masterId);
+          if(m && m.rep && confirm('반복 할 일이에요.\n앞으로의 반복도 모두 이 위치로 고정할까요?\n\n확인 = 반복 전체 고정\n취소 = 이 날짜만')){
+            m.block=t.block; propagateBlock(m);
+          }
+        }
       } else if(z.startsWith('q')){
         t.q=z;
       } else if(z==='rv-done'){ t.done=true; }
