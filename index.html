@@ -1404,6 +1404,27 @@ function buildRepUI(t){
       const s=findTask(editTaskId); if(!s){ toast('반복 규칙을 변경했어요'); closeTaskSheet(); return; }
       buildRepUI(s); };
     box.appendChild(end);
+    // FLOW 위치 고정: 버튼 한 번으로 원본+모든 반복을 같은 시간 블록에 고정
+    const pin=document.createElement('div');
+    pin.style.cssText='width:100%;margin-top:10px';
+    pin.innerHTML=`<label style="font-size:12.5px;font-weight:700;color:var(--soft)">FLOW 위치 고정 — 모든 반복에 적용</label>`;
+    const rowEl=document.createElement('div');
+    rowEl.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:7px';
+    const curBlock = (typeof eff.block==='number') ? eff.block : null;
+    const mkBtn=(label,bi)=>{
+      const b=document.createElement('button');
+      b.className='pill'+(curBlock===bi?' apply':''); b.type='button'; b.textContent=label;
+      b.onclick=()=>{
+        eff.block=bi; propagateBlock(eff); save(); render();
+        const s=findTask(editTaskId); if(!s){ closeTaskSheet(); return; }
+        buildRepUI(s);
+      };
+      rowEl.appendChild(b);
+    };
+    (day().blocks||[]).forEach((bl,i)=> mkBtn(`${bl.start}–${bl.end}`, i));
+    mkBtn('ORDER', null);
+    pin.appendChild(rowEl);
+    box.appendChild(pin);
   }
 }
 $('#repSeg').addEventListener('click', e=>{
