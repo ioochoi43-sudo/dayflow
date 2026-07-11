@@ -839,6 +839,13 @@ function archive(){ if(!Array.isArray(DB.archive)) DB.archive=[]; return DB.arch
 function findTask(id){ return tasks().find(t=>t.id===id) || archive().find(t=>t.id===id); }
 function inArchive(id){ return archive().some(t=>t.id===id); }
 function archiveTask(t){                       // 보관함으로 (홀드)
+  // 반복 생성본이면: 그 날짜 재생성 방지 + 독립 항목으로 전환
+  if(t.masterId){
+    const m=findTaskAnywhere(t.masterId);
+    const k=findDayOf(t.id)||cur;
+    if(m && m.rep){ if(!Array.isArray(m.rep.skip)) m.rep.skip=[]; if(!m.rep.skip.includes(k)) m.rep.skip.push(k); }
+    t.masterId=null;
+  }
   const d=day(); d.tasks=d.tasks.filter(x=>x.id!==t.id);
   t.hold=true; t.done=false; t.block=null;
   if(!inArchive(t.id)) archive().push(t);
@@ -1492,7 +1499,8 @@ function materializeRepeats(dateKey){
     });
     if((dayObj.tasks||[]).length!==before) made=true;
   }
-  // 2) 생성: 규칙에 맞는데 아직 없는 발생분 추가
+  // 2) 생성: 규칙에 맞는데 아직 없는 발생분 추가 (과거 날짜는 만들지 않음)
+  if(dateKey < todayKey()){ if(made) save(); return; }
   Object.entries(masters).forEach(([mid, m])=>{
     if(m.day>=dateKey) return;
     if(!repMatches(m.day, m.rep, dateKey)) return;
@@ -1606,6 +1614,12 @@ $('#taskSave').onclick=()=>{
   if(newText) t.text=newText;
   const newDate=$('#taskDate').value;
   if(newDate && newDate!==cur){
+    // 반복 생성본을 옮기면: 원래 날짜는 건너뛰기 기록(재생성 방지), 항목은 독립 항목으로 전환
+    if(t.masterId){
+      const m=findTaskAnywhere(t.masterId);
+      if(m && m.rep){ if(!Array.isArray(m.rep.skip)) m.rep.skip=[]; if(!m.rep.skip.includes(cur)) m.rep.skip.push(cur); }
+      t.masterId=null;
+    }
     // 현재 날짜에서 빼서 지정한 날짜로 이동
     const d=day(); d.tasks=d.tasks.filter(x=>x.id!==t.id);
     const target=ensureDay(newDate);
