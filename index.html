@@ -515,7 +515,7 @@
         <b id="calTitle">—</b>
         <button id="calNext" aria-label="다음 달">›</button>
       </div>
-      <div class="cal-wd"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+      <div class="cal-wd"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div>
       <div class="cal-grid" id="calGrid"></div>
       <div class="col-head" style="margin-top:20px"><h2 id="calDayTitle">—</h2><span class="count" id="calDayCount">0</span></div>
       <div id="calDayList"></div>
@@ -1326,7 +1326,7 @@ function openTaskSheet(id){
   $('#taskBg').classList.add('on'); $('#taskSheet').classList.add('on');
 }
 /* ── 반복 설정 UI ─────────────────────── */
-const WD=['일','월','화','수','목','금','토'];
+const WD=[{l:'월',i:1},{l:'화',i:2},{l:'수',i:3},{l:'목',i:4},{l:'금',i:5},{l:'토',i:6},{l:'일',i:0}];   // 월요일 시작, i는 Date.getDay() 값과 호환
 /* 규칙 보유자(원본) 찾기 — 생성본이면 원본을 반환 */
 function repMaster(t){
   if(t.rep) return t;
@@ -1354,6 +1354,15 @@ function afterRepChange(master){
   if(!shown){ toast('반복 규칙을 변경했어요'); closeTaskSheet(); return; }
   buildRepUI(shown);
 }
+/* 이번만 건너뛰기: 해당 날짜의 발생분 제거 + 원본에 skip 기록 (반복은 계속) */
+function skipOccurrence(t, master){
+  const k=findDayOf(t.id)||cur;
+  if(!Array.isArray(master.rep.skip)) master.rep.skip=[];
+  if(!master.rep.skip.includes(k)) master.rep.skip.push(k);
+  Object.values(DB.days||{}).forEach(d=>{ d.tasks=(d.tasks||[]).filter(x=>x.id!==t.id); });
+  save(); render(); closeTaskSheet();
+  toast(fmtDate(k)+'은 건너뛰어요');
+}
 function buildRepUI(t){
   const master=repMaster(t);
   const eff = master || t;                              // 규칙을 실제로 들고 있는 항목
@@ -1365,6 +1374,11 @@ function buildRepUI(t){
     note.style.cssText='width:100%;font-size:12px;color:var(--soft);margin-bottom:4px';
     note.textContent='↻ 반복 시리즈 항목이에요. 아래 설정은 원본 규칙에 적용돼요.';
     box.appendChild(note);
+    const skipBtn=document.createElement('button');
+    skipBtn.className='pill'; skipBtn.type='button'; skipBtn.textContent='↷ 이번만 건너뛰기';
+    skipBtn.style.cssText='margin-bottom:6px';
+    skipBtn.onclick=()=> skipOccurrence(t, master);
+    box.appendChild(skipBtn);
   }
   const guard=()=>{                                       // 편집 중이던 항목이 정리로 사라졌으면 시트 닫기
     const s=findTask(editTaskId);
@@ -1378,11 +1392,11 @@ function buildRepUI(t){
     s.querySelector('#repInt').addEventListener('input',e=> tweak(()=>{ eff.rep.interval=Math.max(1,+e.target.value||1); }) );
     box.appendChild(s);
   } else if(type==='weekly'){
-    WD.forEach((w,i)=>{
+    WD.forEach(w=>{
       const b=document.createElement('button');
-      b.className='wd'+((eff.rep.days||[]).includes(i)?' on':''); b.textContent=w;
-      b.onclick=()=>{ const ds=eff.rep.days||(eff.rep.days=[]); const at=ds.indexOf(i);
-        if(at>=0){ if(ds.length>1) ds.splice(at,1); } else ds.push(i);
+      b.className='wd'+((eff.rep.days||[]).includes(w.i)?' on':''); b.textContent=w.l;
+      b.onclick=()=>{ const ds=eff.rep.days||(eff.rep.days=[]); const at=ds.indexOf(w.i);
+        if(at>=0){ if(ds.length>1) ds.splice(at,1); } else ds.push(w.i);
         purgeFutureOccurrences(eff.id); save(); render();
         const s=findTask(editTaskId); if(!s){ toast('반복 규칙을 변경했어요'); closeTaskSheet(); return; }
         buildRepUI(s); };
@@ -1411,6 +1425,31 @@ function buildRepUI(t){
       const s=findTask(editTaskId); if(!s){ toast('반복 규칙을 변경했어요'); closeTaskSheet(); return; }
       buildRepUI(s); };
     box.appendChild(end);
+    // 건너뛴 날짜 관리: 칩 목록, ×로 해제하면 그 날짜에 다시 생성
+    const skips=(eff.rep.skip||[]).slice().sort();
+    if(skips.length){
+      const sk=document.createElement('div');
+      sk.style.cssText='width:100%;margin-top:10px';
+      sk.innerHTML=`<label style="font-size:12.5px;font-weight:700;color:var(--soft)">건너뛴 날짜</label>`;
+      const chipRow=document.createElement('div');
+      chipRow.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:6px';
+      skips.forEach(k=>{
+        const chip=document.createElement('button');
+        chip.className='pill'; chip.type='button';
+        chip.innerHTML=`${fmtDate(k)} <span style="opacity:.6;margin-left:3px">×</span>`;
+        chip.title='해제하면 이 날짜에 다시 생성돼요';
+        chip.onclick=()=>{
+          eff.rep.skip=eff.rep.skip.filter(x=>x!==k);
+          save(); render();
+          const s=findTask(editTaskId); if(!s){ closeTaskSheet(); return; }
+          buildRepUI(s);
+          toast(fmtDate(k)+' 건너뛰기를 해제했어요');
+        };
+        chipRow.appendChild(chip);
+      });
+      sk.appendChild(chipRow);
+      box.appendChild(sk);
+    }
     // FLOW 위치 고정: 버튼 한 번으로 원본+모든 반복을 같은 시간 블록에 고정
     const pin=document.createElement('div');
     pin.style.cssText='width:100%;margin-top:10px';
@@ -1641,7 +1680,7 @@ function renderCalendar(syncToCur){
   if(syncToCur || !calYM) calYM=cur.slice(0,7);
   const [Y,M]=calYM.split('-').map(Number);
   $('#calTitle').textContent=`${Y}년 ${M}월`;
-  const first=new Date(Y,M-1,1), startDow=first.getDay();
+  const first=new Date(Y,M-1,1), startDow=(first.getDay()+6)%7;   // 월요일 시작 (0=월 ... 6=일)
   const daysInMonth=new Date(Y,M,0).getDate();
   // 이 달의 모든 날짜에 반복 미리 생성 (셀을 누르지 않아도 보이게)
   for(let dd=1;dd<=daysInMonth;dd++){
