@@ -133,6 +133,8 @@
   .card .cat-chip{flex:0 0 auto; max-width:104px; height:24px; padding:0 9px; display:inline-flex; align-items:center; gap:5px; border:none; border-radius:30px; background:#ffffffb3; color:var(--soft); font-size:11px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;}
   .card .cat-chip:active{transform:scale(.95);}
   .card .subcnt{flex:0 0 auto; font-size:10px; font-weight:800; color:var(--soft); background:#ffffffb3; padding:3px 7px; border-radius:20px;}
+  .card .daytag{flex:0 0 auto; font-size:9.5px; font-weight:800; color:var(--soft); background:#ffffffb3; padding:2.5px 7px; border-radius:20px;}
+  .card.darkbg .daytag{background:#ffffff33; color:#fff;}
   /* 카테고리 그룹 헤더 (이미지 스타일: 색 점 + 이름) */
   .cat-head{display:flex; align-items:center; gap:8px; margin:14px 4px 8px;}
   .cat-head:first-child{margin-top:2px;}
@@ -461,7 +463,7 @@
     <section class="view" id="view-matrix">
       <div class="matrix-grid">
         <div class="panel matrix-today">
-          <div class="col-head"><h2>오늘 할 일</h2><span class="count" id="inboxCount">0</span></div>
+          <div class="col-head"><h2 id="inboxTitle">오늘 할 일</h2><span class="count" id="inboxCount">0</span></div>
           <div class="dropzone" data-zone="inbox" id="inboxZone"></div>
           <div class="quickadd">
             <span class="label">빠른 추가</span>
@@ -575,6 +577,13 @@
       <span>시간 블록에 넣은 일은 ORDER 목록에서 사라져요</span>
     </div>
     <button class="switch" id="hideToggle" role="switch" aria-label="타임라인 항목 ORDER에서 숨기기"></button>
+  </div>
+  <div class="opt-row" style="margin-top:14px">
+    <div class="opt-txt">
+      <b>MATRIX 주간 보기</b>
+      <span>이번 주(월~일) 할 일을 한 화면에서 분류해요. 끄면 오늘만 표시</span>
+    </div>
+    <button class="switch" id="mwToggle" role="switch" aria-label="MATRIX 주간 보기"></button>
   </div>
   <div class="opt-row" style="margin-top:14px">
     <div class="opt-txt">
@@ -701,6 +710,7 @@ function settings(){
   if(o.hideScheduled===undefined) o.hideScheduled=true;
   if(o.sinkDone===undefined) o.sinkDone=true;
   if(o.priSort===undefined) o.priSort=true;
+  if(o.matrixWeekly===undefined) o.matrixWeekly=true;
   if(!o.emph) o.emph='star';
   return o;
 }
@@ -836,7 +846,11 @@ function day(){
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function tasks(){ return day().tasks; }
 function archive(){ if(!Array.isArray(DB.archive)) DB.archive=[]; return DB.archive; }
-function findTask(id){ return tasks().find(t=>t.id===id) || archive().find(t=>t.id===id); }
+function findTask(id){
+  let t=tasks().find(x=>x.id===id); if(t) return t;
+  for(const k of Object.keys(DB.days||{})){ t=(DB.days[k].tasks||[]).find(x=>x.id===id); if(t) return t; }
+  return archive().find(x=>x.id===id);
+}
 function inArchive(id){ return archive().some(t=>t.id===id); }
 function archiveTask(t){                       // 보관함으로 (홀드)
   // 반복 생성본이면: 그 날짜 재생성 방지 + 독립 항목으로 전환
@@ -846,7 +860,7 @@ function archiveTask(t){                       // 보관함으로 (홀드)
     if(m && m.rep){ if(!Array.isArray(m.rep.skip)) m.rep.skip=[]; if(!m.rep.skip.includes(k)) m.rep.skip.push(k); }
     t.masterId=null;
   }
-  const d=day(); d.tasks=d.tasks.filter(x=>x.id!==t.id);
+  const d=day(); Object.values(DB.days||{}).forEach(dd=>{ dd.tasks=(dd.tasks||[]).filter(x=>x.id!==t.id); });
   t.hold=true; t.done=false; t.block=null;
   if(!inArchive(t.id)) archive().push(t);
 }
@@ -967,6 +981,7 @@ function cardEl(t, o={}){
   html += `<button class="chk" data-check aria-label="완료 체크">${checkSVG()}</button>`;
   if(o.num)  html += `<span class="num">${o.num}</span>`;
   html += `<span class="txt" data-txt>${escapeHtml(t.text)}</span>`;
+  if(o.dayTag) html += `<span class="daytag">${o.dayTag}</span>`;
   if(t.subs && t.subs.length){
     const dn=t.subs.filter(s=>s.done).length;
     html += `<span class="subcnt">${dn}/${t.subs.length}</span>`;
@@ -1018,8 +1033,26 @@ function renderFlow(){
   });
 }
 
+/* 주 범위: cur가 속한 주(월~일)의 날짜 키 7개 */
+function weekRange(k){
+  const d=keyToDate(k); const off=(d.getDay()+6)%7;
+  const start=new Date(d); start.setDate(d.getDate()-off);
+  return Array.from({length:7},(_,i)=>{ const x=new Date(start); x.setDate(start.getDate()+i); return todayKey(x); });
+}
 function renderMatrix(){
-  const all = tasks();
+  const weekly = settings().matrixWeekly;
+  // 대상 수집: 주간이면 이번 주 전체(반복도 미리 생성), 아니면 오늘만
+  const dayOf={}; let all=[];
+  if(weekly){
+    const days=weekRange(cur);
+    days.forEach(k=>{ if(k>=todayKey()) materializeRepeats(k); });
+    days.forEach(k=>{ (DB.days[k]?.tasks||[]).forEach(t=>{ all.push(t); dayOf[t.id]=k; }); });
+  } else {
+    tasks().forEach(t=>{ all.push(t); dayOf[t.id]=cur; });
+  }
+  const tag = t => weekly ? (()=>{ const d=keyToDate(dayOf[t.id]); return `${d.getMonth()+1}/${d.getDate()}`; })() : null;
+  const title=$('#inboxTitle'); if(title) title.textContent = weekly ? '이번 주 할 일' : '오늘 할 일';
+
   const inbox = sortDisplay(all.filter(t=>!t.q));
   const z = $('#inboxZone'); z.innerHTML='';
   if(!inbox.length){ z.innerHTML = `<div class="empty">모두 분류했어요 ✦</div>`; }
@@ -1033,7 +1066,7 @@ function renderMatrix(){
       const h=document.createElement('div'); h.className='cat-head';
       h.innerHTML=`<i style="background:${g.c?g.c.color:'#c9c9d3'}"></i><b>${g.c?escapeHtml(g.c.name):'미분류'}</b><span>${g.items.length}</span>`;
       z.appendChild(h);
-      g.items.forEach(t=> z.appendChild(cardEl(t,{fillFav:true, grip:true})) );
+      g.items.forEach(t=> z.appendChild(cardEl(t,{fillFav:true, grip:true, dayTag:tag(t)})) );
     });
   }
   $('#inboxCount').textContent = inbox.length;
@@ -1042,7 +1075,7 @@ function renderMatrix(){
     const dz = document.querySelector(`[data-zone="${q}"]`);
     dz.innerHTML='';
     const items = sortDisplay(all.filter(t=>t.q===q));
-    items.forEach(t=> dz.appendChild(cardEl(t,{fillFav:true, grip:true})) );
+    items.forEach(t=> dz.appendChild(cardEl(t,{fillFav:true, grip:true, dayTag:tag(t)})) );
     if(!items.length){
       dz.innerHTML = q==='q4'
         ? `<div class="empty drop-hint">여기로 드롭</div>`
@@ -1174,6 +1207,7 @@ function syncOpts(){
   const sw=$('#hideToggle'); if(sw) sw.classList.toggle('on', !!settings().hideScheduled);
   const sk=$('#sinkToggle'); if(sk) sk.classList.toggle('on', !!settings().sinkDone);
   const pr=$('#priToggle'); if(pr) pr.classList.toggle('on', !!settings().priSort);
+  const mw=$('#mwToggle'); if(mw) mw.classList.toggle('on', !!settings().matrixWeekly);
   $$('#emphSeg [data-emph]').forEach(b=> b.classList.toggle('on', b.dataset.emph===settings().emph) );
 }
 function openSheet(){ $('#sheetBg').classList.add('on'); $('#sheet').classList.add('on'); buildSwatches(); syncOpts(); syncQuad(); buildCatManager(); buildTplList(); }
@@ -1185,6 +1219,7 @@ $('#themeColor').addEventListener('input', e=>setTheme(e.target.value));
 $('#hideToggle').onclick=()=>{ settings().hideScheduled=!settings().hideScheduled; save(); syncOpts(); render(); };
 $('#sinkToggle').onclick=()=>{ settings().sinkDone=!settings().sinkDone; save(); syncOpts(); render(); };
 $('#priToggle').onclick=()=>{ settings().priSort=!settings().priSort; save(); syncOpts(); render(); };
+$('#mwToggle').onclick=()=>{ settings().matrixWeekly=!settings().matrixWeekly; save(); syncOpts(); render(); };
 $('#emphSeg').addEventListener('click', e=>{
   const b=e.target.closest('[data-emph]'); if(!b) return;
   settings().emph=b.dataset.emph; save(); syncOpts(); render();
@@ -1321,7 +1356,7 @@ function openTaskSheet(id){
   editTaskId=id;
   if(!Array.isArray(t.subs)) t.subs=[];
   $('#taskText').value=t.text;
-  $('#taskDate').value=cur;
+  $('#taskDate').value=findDayOf(t.id)||cur;
   buildTaskCats(t); buildSubList(t); buildRepUI(t);
   $('#taskBg').classList.add('on'); $('#taskSheet').classList.add('on');
 }
@@ -1652,15 +1687,16 @@ $('#taskSave').onclick=()=>{
   const newText=$('#taskText').value.trim();
   if(newText) t.text=newText;
   const newDate=$('#taskDate').value;
-  if(newDate && newDate!==cur){
+  const srcDay=findDayOf(t.id)||cur;
+  if(newDate && newDate!==srcDay){
     // 반복 생성본을 옮기면: 원래 날짜는 건너뛰기 기록(재생성 방지), 항목은 독립 항목으로 전환
     if(t.masterId){
       const m=findTaskAnywhere(t.masterId);
-      if(m && m.rep){ if(!Array.isArray(m.rep.skip)) m.rep.skip=[]; if(!m.rep.skip.includes(cur)) m.rep.skip.push(cur); }
+      if(m && m.rep){ if(!Array.isArray(m.rep.skip)) m.rep.skip=[]; if(!m.rep.skip.includes(srcDay)) m.rep.skip.push(srcDay); }
       t.masterId=null;
     }
-    // 현재 날짜에서 빼서 지정한 날짜로 이동
-    const d=day(); d.tasks=d.tasks.filter(x=>x.id!==t.id);
+    // 원래 날짜에서 빼서 지정한 날짜로 이동
+    if(DB.days[srcDay]) DB.days[srcDay].tasks=DB.days[srcDay].tasks.filter(x=>x.id!==t.id);
     const target=ensureDay(newDate);
     const maxOrd=target.tasks.reduce((m,x)=>Math.max(m,x.ord||0),0);
     t.ord=maxOrd+1; t.block=null;          // 새 날엔 타임라인 재배치
